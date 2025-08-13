@@ -1,0 +1,13 @@
+name = "SpeedyWeatherEmulator"
+uuid = "8a7fb89b-54cc-459c-8edc-36b4f800a81f"
+authors = ["Siegl Stefan stefan.siegl02@gmail.com"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.11.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
