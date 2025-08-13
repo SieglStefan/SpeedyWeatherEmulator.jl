@@ -19,5 +19,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/SieglStefan/SpeedyWeatherEmulator.jl",
-    devbranch="master",
+    devbranch="main",
 )

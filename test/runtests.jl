@@ -2,5 +2,5 @@ using SpeedyWeatherEmulator
 using Test
 
 @testset "SpeedyWeatherEmulator.jl" begin
-    # Write your tests here.
+    include("functionsTest.jl")
 end
