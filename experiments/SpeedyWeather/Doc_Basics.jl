@@ -1,0 +1,15 @@
+using SpeedyWeather
+
+# Creating the grid
+spectral_grid = SpectralGrid(trunc=5, nlayers=1,Grid=FullGaussianGrid)
+
+# Creating the model
+model = BarotropicModel(spectral_grid)
+
+# Initialize the simulation
+simulation = initialize!(model)
+
+# Run the simulation
+run!(simulation, period=Day(10))
+
+spectral_grid
