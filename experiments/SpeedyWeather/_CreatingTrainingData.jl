@@ -7,7 +7,7 @@ const t_max = 54                    # maximal forecast length in hours (t_max is
 const t_step = 6                    # in hours, min. 3h (timestep of T5 model)
 const t_spinup = 10                 # spinup time (settle-in time)
 const trunc = 5                     # parameter of model: e.g. T5
-const N_IC = 10                     # number of Initial Conditions
+const N_IC = 100                    # number of Initial Conditions
 
 
 function saveVorticity!(data::Array{Float32, 3}, simulation, step::Int, ic::Int)
@@ -60,5 +60,3 @@ data_norm = (data .- μ) ./ (σ .+ eps(Float32))
 # Saving
 jldsave("experiments/SpeedyWeather/training_data_T$(trunc)_nsteps$(n_steps)_IC$(N_IC).jld2"; data_norm, µ, σ)
 println("Normed training data saved at: 'experiments/SpeedyWeather/training_data_T$(trunc)_nsteps$(n_steps)_IC$(N_IC).jld2'")
-
-
