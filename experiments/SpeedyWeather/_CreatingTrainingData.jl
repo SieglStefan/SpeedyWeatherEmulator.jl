@@ -7,7 +7,7 @@ const t_max = 54                    # maximal forecast length in hours (t_max is
 const t_step = 6                    # in hours, min. 3h (timestep of T5 model)
 const t_spinup = 10                 # spinup time (settle-in time)
 const trunc = 5                     # parameter of model: e.g. T5
-const N_IC = 100                    # number of Initial Conditions
+const N_IC = 200                    # number of Initial Conditions
 
 
 function saveVorticity!(data::Array{Float32, 3}, simulation, step::Int, ic::Int)
