@@ -25,29 +25,35 @@ function get_vorticity!(vor::Array{Float32, 3}, sim, step::Int, ic::Int)
     vor[n_vars+1:2*n_vars, step, ic] .= Float32.(imag.(vorticity_vec))
 end
 
-function get_vorticity!(vor::Array{Float32, 1}, sim)
+function get_vorticity!(sim)
     vorticity_vec = vec(sim.prognostic_variables.vor[:,1,1])
     n_vars = length(vorticity_vec)
     
+    vor = zeros(Float32, 2*n_vars)
+
     vor[1:n_vars] .= Float32.(real.(vorticity_vec))
     vor[n_vars+1:2*n_vars] .= Float32.(imag.(vorticity_vec))
+
+    return vor
 end
 
 
 function zscore_trafo(data::Array{Float32, 3})
-    μ = vec(mean(data, dims=(2,3)))
-    σ = vec(std(data, dims=(2,3)))
+    μ = Float32.vec(mean(data, dims=(2,3)))
+    σ = Float32.vec(std(data, dims=(2,3)))
 
     data_norm = (data .- μ) ./ (σ .+ eps(Float32))
 
     return data_norm, μ, σ
 end
 
-function inv_zscore_trafo(data, μ, σ)
-    return data .* (σ .+ eps(32)) .+ μ
+function zscore_trafo(data::Vector{Float32}, norm_stats)
+    return (data .- norm_stats.μ) ./ (norm_stats.σ .+ eps(Float32))
 end
 
 
+function inv_zscore_trafo(data::Vector{Float32}, norm_stats)
+    return data .* (norm_stats.σ .+ eps(Float32)) .+ norm_stats.μ
+end
 
-
-end # module
+end

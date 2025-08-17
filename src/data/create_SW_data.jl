@@ -3,19 +3,22 @@ using JLD2
 
 include(joinpath(@__DIR__, "..", "utils", "utils.jl"))
 using .DataUtils
+include(joinpath(@__DIR__, "..", "utils", "structs.jl"))
+using .DataStructs: SimPara, NormStats
 
 # Parameter definition
 const TRUNC = 5                     # parameter of model: e.g. T5
 
 
-function create_training_data(; t_max::Real = 54.,       # maximal forecast length in hours (t_max is not overreached!)
+function create_sw_data(;       t_max::Real = 54.,       # maximal forecast length in hours (t_max is not overreached!)
                                 t_step::Real = 6.,       # in hours, min. 3h (timestep of T5 model)
                                 t_spinup::Real = 10.,    # spinup time (settle-in time)
-                                n_ic::Integer = 10)         # number of Initial Conditions
+                                n_ic::Integer = 1000,
+                                trunc::Integer = TRUNC)         # number of Initial Conditions
 
 
     # Basic simulation for getting the dimension
-    spectral_grid = SpectralGrid(trunc=TRUNC, nlayers=1, Grid=FullGaussianGrid)
+    spectral_grid = SpectralGrid(trunc=trunc, nlayers=1, Grid=FullGaussianGrid)
     model = BarotropicModel(spectral_grid)
     sim0 = initialize!(model) 
 
@@ -42,20 +45,23 @@ function create_training_data(; t_max::Real = 54.,       # maximal forecast leng
     # Z-score transformation
     vor_norm, μ, σ = zscore_trafo(vor)
 
-    return (n_steps, n_ic, vor_norm, μ, σ)
+    sim_para = SimPara(trunc, n_steps, n_ic)
+    norm_stats = NormStats(μ, σ)
+
+    return sim_para, vor_norm, norm_stats
 end
 
 
-function save_training_data(n_steps::Integer, n_ic::Integer, data::Array{Float32, 3}, μ::Vector{Float32}, σ::Vector{Float32})
+function save_sw_data(sim_para::SimPara, vor_norm::Array{Float32,3}, norm_stats::NormStats)
     dir = joinpath(@__DIR__, "..", "..", "data", "training_data")
 
-    filename = "training_data_T$(TRUNC)_nsteps$(n_steps)_IC$(n_ic).jld2"
+    filename = "training_data_T$(sim_para.trunc)_nsteps$(sim_para.n_steps)_IC$(sim_para.n_ic).jld2"
     filepath = normpath(joinpath(dir, filename))
 
-    jldsave(filepath; data, μ, σ)
+    jldsave(filepath; sim_para, vor_norm, norm_stats)
     @info "Normed training data saved at: $filepath"
 end
 
 
-training_data = create_training_data()
-save_training_data(training_data...)
+sim_para, vor_norm, norm_stats = create_sw_data()
+save_sw_data(sim_para, vor_norm, norm_stats)
