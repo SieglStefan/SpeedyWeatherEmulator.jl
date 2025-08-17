@@ -1,34 +1,24 @@
+### WRITE TO SCRIPT
+
 using JLD2, SpeedyWeather, Statistics
 
-include(joinpath(@__DIR__, "..", "utils", "utils.jl"))
-using .DataUtils: get_vorticity!, zscore_trafo, inv_zscore_trafo
-include(joinpath(@__DIR__, "..", "utils", "structs.jl"))
-using .DataStructs: MyModel
-
-trunc = 5
-n_steps = 8
-n_ic = 1000
-
-
-
-# Load the model
-dir = joinpath(@__DIR__, "..", "..", "data", "model_data")
-    
-filename = "model_T$(trunc)_nsteps$(n_steps)_IC$(n_ic).jld2"
-filepath = normpath(joinpath(dir, filename))
-file = load(filepath)
-
-model = file["model"]
-norm_stats = file["norm_stats"]
+#include(joinpath(@__DIR__, "..", "utils", "BasicStructs.jl"))
+using .BasicStructs
+#include(joinpath(@__DIR__, "..", "utils", "ZScoreTrafoUtils.jl"))
+using .ZScoreTrafoUtils
+#include(joinpath(@__DIR__, "..", "utils", "EmulatorUtils.jl"))
+using .EmulatorUtils
+#include(joinpath(@__DIR__, "..", "utils", "SpeedyWeatherUtils.jl"))
+using .SpeedyWeatherUtils
 
 
+sim_para = SimPara(trunc=5, n_steps=8, n_ic=1000)
+model, norm_stats = load_neuralnetwork(sim_para)
 
 ### 0) Initial conditions
-
 m = 4
 ω = 7.848e-6
 K = 7.848e-6
-
 ζ(λ, θ, σ) = 2ω*sind(θ) - K*sind(θ)*cosd(θ)^m*(m^2 + 3m + 2)*cosd(m*λ)
 
 
@@ -50,14 +40,10 @@ vorA_SW = get_vorticity!(sim)
 run!(sim, period=Hour(6))
 vorB_SW = get_vorticity!(sim)
 
-
-
 ### 2) Neural Network
 
 vorA_pre = zscore_trafo(vorA_SW, norm_stats)
-
 vorA_post = model(vorA_pre)
-
 vorB_NN = inv_zscore_trafo(vorA_post, norm_stats)
 
 
@@ -80,4 +66,10 @@ for i in 1:54
 end
 
 println("-----------------------------------")
+
+
+
+
+
+
 

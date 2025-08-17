@@ -1,11 +1,13 @@
 using JLD2, Plots, Statistics
 
+include(joinpath(@__DIR__, "..", "utils", "BasicStructs.jl"))
+using .BasicStructs
 
 
-function plot_losses(;trunc::Int, n_steps::Int, n_ic::Int)
+function plot_losses(sim_para::SimPara)
     dir = joinpath(@__DIR__, "..", "..", "data", "model_data")
     
-    filename = "losses_T$(trunc)_nsteps$(n_steps)_IC$(n_ic).jld2"
+    filename = "losses_T$(sim_para.trunc)_nsteps$(sim_para.n_steps)_IC$(sim_para.n_ic).jld2"
     filepath = normpath(joinpath(dir, filename))
     losses = JLD2.load(filepath, "losses")
 
@@ -30,4 +32,5 @@ function plot_losses(;trunc::Int, n_steps::Int, n_ic::Int)
     )
 end
 
-plot_losses(trunc=5, n_steps=8, n_ic=1000)
+sim_para = SimPara(trunc=5, n_steps=8, n_ic=1000)
+plot_losses(sim_para)
