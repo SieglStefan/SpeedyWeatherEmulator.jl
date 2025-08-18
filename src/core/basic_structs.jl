@@ -1,7 +1,6 @@
 module BasicStructs
 
 
-
 export SimPara
 
 
@@ -14,7 +13,7 @@ export SimPara
             initial_cond::Union{Nothing, Function}, 
             storage_key::String)
 
-Container for basic simulation parameters for SpeedyWeather.jl simulation data generation, see constructor for details.
+Container for basic simulation parameters for SpeedyWeather.jl simulation data generation and data shape, see constructor for details.
 """
 struct SimPara
     trunc::Int64
