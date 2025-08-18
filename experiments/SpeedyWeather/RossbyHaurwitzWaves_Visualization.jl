@@ -27,7 +27,7 @@ vor_grid = transform(vor)
 
 CairoMakie.heatmap(vor_grid, title="Relative vorticity [1/s] of Rossby-Haurwitz wave")
 
-run!(simulation, period=Day(0.5))
+run!(simulation, period=Hour(7*6.0))
 
 # a running simulation always transforms spectral variables
 # so we don't have to do the transform manually but just pull

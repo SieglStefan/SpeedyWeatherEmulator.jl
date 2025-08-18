@@ -9,12 +9,4 @@ model = BarotropicModel(spectral_grid)
 # Initialize the simulation
 simulation = initialize!(model)
 
-# Run the simulation
-run!(simulation, period=Day(10))
-
-
-
-spectral_grid = SpectralGrid(trunc=5, nlayers=1,Grid=FullGaussianGrid)
-model = BarotropicModel(spectral_grid)
-simulation = initialize!(model)
-run!(simulation, period=Day(10))
+model.time_stepping

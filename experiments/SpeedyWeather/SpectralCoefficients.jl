@@ -26,5 +26,6 @@ vor = vec(simulation.prognostic_variables.vor[:,1,1])
 
 simulation.prognostic_variables.vor[:,1,1]
 
+display(vor)
 
 

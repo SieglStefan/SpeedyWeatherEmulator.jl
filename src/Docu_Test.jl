@@ -1,47 +1,3 @@
-module SpeedyWeatherEmulator
-
-using CairoMakie
-using SpeedyWeather
-
-# Core
-include("core/basic_structs.jl")
-using .BasicStructs
-
-# Utils
-include("utils/GeneralUtils.jl")
-using .GeneralUtils
-
-include("utils/ZScoreUtils.jl")
-using .ZScoreUtils
-
-# Data
-include("data/sim_data_handling.jl")
-using .SimDataHandling
-
-include("data/data_formatting.jl")
-using .DataFormatting
-
-# model
-include("model/model_structs.jl")
-using .ModelStructs
-include("model/train_model.jl")
-using .TrainModel
-include("model/model_data_handling.jl")
-using .ModelDataHandling
-
-# evaluation
-include("evaluation/plot_losses.jl")
-using .PlotLosses
-
-include("evaluation/plot_forecast_time.jl")
-using .PlotForecastTime
-
-include("evaluation/compare_emulator.jl")
-using .CompareEmulator
-
-include("evaluation/plot_vor_heatmap.jl")
-using .PlotVorHeatmap
-
 ###  STARTING POINT
 # starting point:
 sim_para = SimPara(trunc=5, n_steps=8, n_ic=1000)
@@ -86,34 +42,13 @@ display(plot_losses(losses))
 # test set:
 compare_emulator(tm, all_coeff=true)
 # or define our own:
-#sim_para_comp = SimPara(trunc=5, n_steps=8, n_ic=10)
-#compare_emulator(tm, all_coeff=false, sim_para=sim_para_comp)
+sim_para_comp = SimPara(trunc=5, n_steps=8, n_ic=10)
+compare_emulator(tm, all_coeff=false, sim_para=sim_para_comp)
 # We can also define our own initial conditions, as here with the RossbyHaurwitz wave:
 
-#m = 4
-#ω = 7.848e-6
-#K = 7.848e-6
-#ζ(λ, θ, σ) = Float32.(2ω*sind(θ) - K*sind(θ)*cosd(θ)^m*(m^2 + 3m + 2)*cosd(m*λ))
+m = 4
+ω = 7.848e-6
+K = 7.848e-6
+ζ(λ, θ, σ) = Float32.(2ω*sind(θ) - K*sind(θ)*cosd(θ)^m*(m^2 + 3m + 2)*cosd(m*λ))
 
-#compare_emulator(tm, all_coeff=true, initial_cond = ζ)
-
-
-sim_para_comp = SimPara(trunc=5, n_steps=8, n_ic=2)
-sim_data = create_sim_data(sim_para_comp)
-vec0 = sim_data.data[:,5,1]
-vec1 = sim_data.data[:,6,1]
-
-vec2 = sim_data.data[:,5,2]
-vec3 = sim_data.data[:,6,2]
-
-plot_vor_heatmap(vec0, 5)
-plot_vor_heatmap(vec1, 5)
-plot_vor_heatmap(tm(vec0),5)
-
-plot_vor_heatmap(vec2, 5)
-plot_vor_heatmap(vec3, 5)
-plot_vor_heatmap(tm(vec2),5)
-
-
-
-end
+compare_emulator(tm, all_coeff=true, initial_cond = ζ)
