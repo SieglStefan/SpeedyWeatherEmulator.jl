@@ -1,34 +1,52 @@
 module CompareEmulator
 
-using JLD2, SpeedyWeather, Statistics, Printf
+using SpeedyWeather, Statistics
 
 using ..BasicStructs
 using ..ModelStructs
 using ..DataFormatting
 using ..SimDataHandling
 
+
 export compare_emulator
 
 
+"""
+    compare_emulator(   tm::TrainedModel; 
+                        sim_data_comp::Sim_Data,
+                        all_coeff::Bool=false)
 
-function compare_emulator(tm::TrainedModel; all_coeff::Bool=false, sim_para::SimPara = tm.sim_para, initial_cond::Union{Nothing,Function}=nothing)
+Calculates and prints the relative error of the emulator `tm` relative to the forecast of SpeedyWeahter.jl.
 
+# Arguments
+- `tm::TrainedModel`:           Emulator which is compared to SpeedyWeather.jl.
+- `sim_data_comp::Sim_Data`:    Simulation Data on which they are compared.
+- `all_coeff::Bool = false`:    Switch for printing the rel. error of all coefficents.
 
-    sim_para = SimPara(trunc = sim_para.trunc, n_steps = sim_para.n_steps, n_ic=sim_para.n_ic)
+# Returns
+- `nothing`
+"""
+function compare_emulator(tm::TrainedModel; 
+                            sim_data_comp::SimData,
+                            all_coeff::Bool=false)
+                            
 
-    sim_data = create_sim_data(sim_para, initial_cond=initial_cond)
-    fd = FormattedData(sim_data, split=1.0)
+    # Create formatted data with split_train=1.0, because there is no need of a validation set
+    fd = FormattedData(sim_data_comp, split_train=1.0)
 
-    vor_NN = tm(fd.data_pairs.x_train)
-    vor_SW = fd.data_pairs.y_train
-
-    rel_err = abs.(vor_NN .- vor_SW) ./ (abs.(vor_SW) .+ eps(Float32)) .* 100
+    # Create comparison vorticities
+    vor_SW = fd.data_pairs.y_train              # Comparison vorticity from SpeedyWether.jl
+    vor_EM = tm(fd.data_pairs.x_train)          # Testing vorticity from the Emulator
+    
+    # Calculate mean relative error
+    rel_err = abs.(vor_EM .- vor_SW) ./ (abs.(vor_SW) .+ eps(Float32)) .* 100
     mean_rel_err = vec(mean(rel_err, dims=2))
 
-    # Zusammenfassende Werte
+    # Calculate the mean and max mean relative error of all spectral coefficents
     mean_mean_rel = mean(mean_rel_err)
     max_mean_rel = maximum(mean_rel_err)
 
+    # Print results
     println("--------------------------------------")
     println("Mean relative error: ", round(mean_mean_rel; digits=3), " %")
     println("Max relative error:  ", round(max_mean_rel; digits=3), " %")
@@ -36,7 +54,8 @@ function compare_emulator(tm::TrainedModel; all_coeff::Bool=false, sim_para::Sim
 
     if all_coeff
         for i in 1:length(mean_rel_err)
-            if all(abs.(vor_SW[i, :]) .< eps(Float32))
+            # Some coefficients are always zero (in sim_data)
+            if all(abs.(vor_SW[i, :]) .< eps(Float32))          
                 println("coeff $i: rel. error = ",
                     round(mean_rel_err[i]; digits=3), " %, ", "\t (SW coeff. is always 0!!!)")
             else
@@ -46,6 +65,8 @@ function compare_emulator(tm::TrainedModel; all_coeff::Bool=false, sim_para::Sim
         end
         println("--------------------------------------")
     end
+
+    return nothing
 end
 
 

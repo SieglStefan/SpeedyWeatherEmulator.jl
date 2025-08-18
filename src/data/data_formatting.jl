@@ -30,6 +30,8 @@ struct DataPairs
     y_train::Matrix{Float32}
     x_valid::Matrix{Float32}
     y_valid::Matrix{Float32}
+    x_test::Matrix{Float32}
+    y_test::Matrix{Float32}
 end
 
 
@@ -49,7 +51,7 @@ end
 
 
 """
-    FormattedData(sim_data::SimulationData; split::Float64=0f7, test_set::Bool=false, split_valid::Float64=0f15)
+    FormattedData(sim_data::SimData; split::Float64=0.7, test_set::Bool=false, split_valid::Float64=0.15)
 
 Constructor for the direct creation of formatted (x,y) = (vor(t), vor(t+t_step)) and splitted data from simulation data `sim_data`.
 
@@ -57,13 +59,13 @@ This Constructor is e.g also used for `compare_emulator` for the creation of dat
     validation- and testsets. (Setting `split_train` = 1.0)
 
 # Fields
-- `sim_data::SimulationData`: Simulation data, which gets formatted.
-- `split_train::Float64 = 0f7`: Fraction of the formatted data which is used for training.
+- `sim_data::SimData`: Simulation data, which gets formatted.
+- `split_train::Float64 = 0.7`: Fraction of the formatted data which is used for training.
 - `test_set::Bool = false`: Switch for enabling test sets.
-- `split_valid::Float64 = 0f15`: Fraction of the formatted data which is used for validation. If `test_set` is `false`,
+- `split_valid::Float64 = 0.15`: Fraction of the formatted data which is used for validation. If `test_set` is `false`,
     the remaining data fraction of the training set is used (e.g. `split_train` = 0.7, results in 30% validation set).
 """
-function FormattedData(sim_data::SimulationData;split_train::Float64=0f7, test_set::Bool=false, split_valid::Float64=0f15)
+function FormattedData(sim_data::SimData; split_train::Float64=0.7, test_set::Bool=false, split_valid::Float64=0.15)
     sim_para = sim_data.sim_para
     data = sim_data.data
 
@@ -72,7 +74,7 @@ function FormattedData(sim_data::SimulationData;split_train::Float64=0f7, test_s
     n_ic = sim_para.n_ic
 
     n_data = (n_steps - 1) * n_ic                               # total number of data pairs coming from sim_data
-    n_train = Integer(split_train * n_data)                     # number of data pairs in the training set
+    n_train = Integer(round(split_train * n_data))                     # number of data pairs in the training set
 
     # Calculate n_valid for array indexing below, depending on the exitence of a test set
     if test_set
