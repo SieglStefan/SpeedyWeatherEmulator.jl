@@ -1,3 +1,11 @@
+# --- Bootstrap: docs-Umgebung + Paket einbinden ---
+using Pkg
+Pkg.activate(@__DIR__)
+Pkg.develop(PackageSpec(path=joinpath(@__DIR__, "..")))
+Pkg.instantiate()
+# --------------------------------------------------
+
+
 using SpeedyWeatherEmulator
 using Documenter
 
@@ -5,6 +13,7 @@ DocMeta.setdocmeta!(SpeedyWeatherEmulator, :DocTestSetup, :(using SpeedyWeatherE
 
 makedocs(;
     modules=[SpeedyWeatherEmulator],
+    checkdocs = :none, 
     authors="Siegl Stefan stefan.siegl02@gmail.com",
     sitename="SpeedyWeatherEmulator.jl",
     format=Documenter.HTML(;
@@ -16,6 +25,7 @@ makedocs(;
         "Home" => "index.md",
     ],
 )
+
 
 deploydocs(;
     repo="github.com/SieglStefan/SpeedyWeatherEmulator.jl",

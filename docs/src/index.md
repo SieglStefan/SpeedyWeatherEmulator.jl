@@ -10,5 +10,9 @@ Documentation for [SpeedyWeatherEmulator](https://github.com/SieglStefan/SpeedyW
 ```
 
 ```@autodocs
-Modules = [SpeedyWeatherEmulator]
-```
+Modules = [
+    SpeedyWeatherEmulator.BasicStructs,
+    SpeedyWeatherEmulator.SimDataHandling,
+]
+
+

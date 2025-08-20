@@ -2,10 +2,11 @@ module SimDataHandling
 
 using SpeedyWeather
 using JLD2
+using Printf
 using ..BasicStructs
 
 
-export SimData, save_sim_data, load_sim_data, is_coeff_zero, calc_n_coeff
+export SimData, save_sim_data, load_sim_data, is_coeff_zero, calc_n_coeff, create_sim_data
 
 
 """
@@ -23,6 +24,54 @@ struct SimData
     sim_para::SimPara
     data::Array{Float32, 3}
 end
+
+function create_sim_data(sim_para::SimPara; overwrite::Bool=false)
+    # Unpack simulation parameters
+    trunc = sim_para.trunc
+    n_steps = sim_para.n_steps
+    n_ic = sim_para.n_ic
+    n_spinup = sim_para.n_spinup
+    t_step = sim_para.t_step
+    initial_cond = sim_para.initial_cond
+    
+    
+    # Create simulation data folder
+    output_path, cancel = create_sim_folder(sim_para, overwrite=overwrite)
+    
+    if cancel
+        # Do nothing, because overwriting data is not allowed
+        @info "Calculation was canceled, because data already exists!"
+        return nothing
+    else
+        # Create simulation data
+        spectral_grid = SpectralGrid(trunc=trunc, nlayers=1)
+        output = JLD2Output(output_dt = Hour(t_step), path=output_path, output_diagnostic=false)
+        model = BarotropicModel(spectral_grid; output=output)
+
+        # Forecast loop for different initial conditions
+        for ic in 1:n_ic                                # looping over the number of initial conditions
+            sim = initialize!(model)                    # initialize the model with new (random) initial conditions
+
+            if initial_cond !== nothing
+                set!(sim, vor=initial_cond)             # if specific IC are defined, set the simulation to them
+            end
+
+            t_max = (n_spinup + n_steps - 1) * t_step     # calculate the whole forecast time
+            run!(sim, period=Hour(t_max), output=true)               # run the simulation
+        end
+    end
+
+    return nothing
+end
+
+
+
+
+
+
+
+
+
 
 
 """
@@ -45,45 +94,40 @@ sim_data = SimData(sim_para)
 ```
 """
 function SimData(sim_para::SimPara)
-
-    # Get the parameters out of sim_para
+    # Unpack simulation parameters
     trunc = sim_para.trunc
     n_steps = sim_para.n_steps
     n_ic = sim_para.n_ic
-    t_spinup = sim_para.t_spinup
-    t_step = sim_para.t_step
-    initial_cond = sim_para.initial_cond
-
-    # Calculate number of complex spectral coefficients
-    n_coeff = calc_n_coeff(trunc=trunc)
-
-    # Define the data vector for storing the spectral coeff.
-    data = zeros(Float32, 2*n_coeff, n_steps, n_ic)  
+    n_spinup = sim_para.n_spinup
     
-    # Generate the SpeedyWeather.jl model
-    spectral_grid = SpectralGrid(trunc=5, nlayers=1,Grid=FullGaussianGrid)
-    model = BarotropicModel(spectral_grid)
+    # Creating data array
+    n_coeff = calc_n_coeff(trunc=trunc)
+    data = zeros(Float32, 2*n_coeff, n_steps, n_ic)  
+
+    file_folder = create_sim_DIR(sim_para)
+
+    for ic in 1:n_ic
+        # Create filepath
+        file_subfolder = @sprintf("run_%04d", ic)
+        filepath = normpath(joinpath(file_folder, file_subfolder, "output.jld2"))
+
+        # Load file and storage data
+        file = jldopen(filepath, "r")
+        out = file["output_vector"]
+        close(file)
 
 
-    # Forecast loop
-    for ic in 1:n_ic                                # looping over the number of initial conditions
-        sim = initialize!(model)                    # initialize the model with new (random) initial conditions
+        # 
+        for step in n_spinup:1:n_spinup+n_steps-1
+            prog, _ = out[step]
+            vor = vec(prog.vor[:,:,1])
 
-        if initial_cond === nothing                  
-            run!(sim, period=Hour(t_spinup))       
-        else
-            set!(sim, vor=initial_cond)             # if specific IC are defined, set the model to them and dont spinup the simulation
-        end
-            
-        get_vorticity!(data, sim, 1, ic)             # get the vorticity of the first step at the initial condition
-
-        for step in 2:n_steps                       # loop over the remaining steps
-            run!(sim, period=Hour(t_step))
-            get_vorticity!(data, sim, step, ic)
+            data[1:n_coeff, step+1-n_spinup, ic] .= Float32.(real.(vor))
+            data[n_coeff+1:2*n_coeff, step+1-n_spinup, ic] .= Float32.(imag.(vor))
         end
     end
-
-    return SimData(sim_para, data)                  # return a SimData object
+        
+    return SimData(sim_para, data)                  
 end
 
 
@@ -156,7 +200,7 @@ Creates a DIR for saving and loading SimulationData according to `sim_para`.
 # Returns
 - `filepath::String`: Returns the filepath
 """
-function create_sim_DIR(;sim_para::SimPara)
+function create_sim_DIR(sim_para::SimPara)
     dir = joinpath(@__DIR__, "..", "..", "data", "sim_data")
     filename = "sim_data_" *
         "T$(sim_para.trunc)_" *                                         
@@ -169,75 +213,31 @@ function create_sim_DIR(;sim_para::SimPara)
 end
 
 
-"""
-    is_coeff_zero(i::Int, sim_data::SimData)  
-
-Checks if a specific spectral coefficient - numbered `i` - is always zero in the simulation data `sim_data`.
-
-# Arguments
-- `i::Int64`: Number of spectral coefficient.
-- `sim_data::SimData`: Simulation data which is checked.
-
-# Returns
-- `is_zero::Bool`: Returns if they are all zero.
-"""
-function is_coeff_zero(i::Int64, sim_data::SimData)
-    data = sim_data.data
-    is_zero = all(data[i, :, :] .== 0f0)
-
-    return is_zero
-end
 
 
-"""
-    calc_n_coeff(;trunc::Int64)
 
-Calculates the number of spectral coefficents of a specific truncation `trunc`.
 
-# Arguments
-- `trunc::Int64`: Number of spectral coefficient.
+function create_sim_folder(sim_para::SimPara; overwrite::Bool=false)
+    folderpath = create_sim_DIR(sim_para)
 
-# Returns
-- `n_coeff::Int64`: Number of spectral coefficients.
-"""
-function calc_n_coeff(;trunc::Int64)
-    n_coeff = 0
-
-    for i in 1:trunc+2
-        n_coeff = n_coeff + i
+    cancel_sim = false
+    if isdir(folderpath)
+        @warn "Simulation data with trunc=$(sim_para.trunc), n_steps=$(sim_para.n_steps), n_ic=$(sim_para.n_ic) and key=$(sim_para.storage_key) already exists!"
+        
+        if overwrite
+            rm(folderpath; recursive=true, force=true)
+            mkpath(folderpath)
+            @info "Folder $folderpath was overwritten."
+        else
+            @info "Folder $folderpath stays untouched. Set parameter overwrite::String = 'true' to overwrite the existing folder or use a key!"
+            cancel_sim = true
+        end
+    else
+        mkpath(folderpath)
+        @info "Folder $folderpath was created."
     end
 
-    return n_coeff-1
-end
-
-
-"""
-    get_vorticity!(vor::Array{Float32,3}, sim, step::Int, ic::Int)
-
-Accesses the spectral coefficents of SpeedyWeather.jl simulations.
-
-Accesses the spectral coefficents of a SpeedyWeather.jl simulation `sim` and at step `step` and for initial condition `ic`
-and stores it at vorticity array `vor`.
-It stores specifically the current leapfrog step `sim.prognostic_variables.vor[:,1,1]`, where the third dimension denotes the 
-current leapfrog step (`[:,1,2]` would denote the last leapfrog step)
-
-# Arguments
-- `vor::Array{Float32,3}`: Storaging array for the vorticity.
-- `sim`: Current Simulation at step `step` and initial contion `ic`.
-- `step::Int`: Current step in the data gen. loop.
-- `ic::Int`: Current initial condition in the data gen. loop.
-
-# Returns
-- `nothing`
-"""
-function get_vorticity!(vor::Array{Float32,3}, sim, step::Int, ic::Int)
-    vorticity = sim.prognostic_variables.vor[:,1,1]
-    n_coeff = size(vorticity, 1)
-    
-    vor[1:n_coeff, step, ic] .= Float32.(real.(vorticity))              # real part of complex spectral coeff.
-    vor[n_coeff+1:2*n_coeff, step, ic] .= Float32.(imag.(vorticity))    # imaginary part
-
-    return nothing
+    return folderpath, cancel_sim
 end
 
 
