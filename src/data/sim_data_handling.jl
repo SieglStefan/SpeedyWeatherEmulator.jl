@@ -9,22 +9,6 @@ using ..BasicStructs
 export SimData, save_sim_data, load_sim_data, is_coeff_zero, calc_n_coeff, create_sim_data
 
 
-"""
-    SimData(sim_para::SimPara, 
-            data::Array{Float32,3})
-
-Container for SpeedyWeather.jl simulation data and corresponding simulation parameter, see constructor for details.
-
-# Fields
-- `sim_para::SimPara`: Simulation parameters for data generation.
-- `data::Array{Float32,3}`: Data storage, where `data` = (n_coeff) x `n_steps` x `n_ic`, where
-    (n_coeff) is the number of spectral coefficients (real and imaginary part), e.g. for `trunc`=5: n_coeff=54
-"""
-struct SimData
-    sim_para::SimPara
-    data::Array{Float32, 3}
-end
-
 function create_sim_data(sim_para::SimPara; overwrite::Bool=false)
     # Unpack simulation parameters
     trunc = sim_para.trunc
@@ -65,13 +49,47 @@ function create_sim_data(sim_para::SimPara; overwrite::Bool=false)
 end
 
 
+function create_sim_folder(sim_para::SimPara; overwrite::Bool=false)
+    folderpath = create_sim_DIR(sim_para)
+
+    cancel_sim = false
+    if isdir(folderpath)
+        @warn "Simulation data with trunc=$(sim_para.trunc), n_steps=$(sim_para.n_steps), n_ic=$(sim_para.n_ic) and key=$(sim_para.storage_key) already exists!"
+        
+        if overwrite
+            rm(folderpath; recursive=true, force=true)
+            mkpath(folderpath)
+            @info "Folder $folderpath was overwritten."
+        else
+            @info "Folder $folderpath stays untouched. Set parameter overwrite::String = 'true' to overwrite the existing folder or use a key!"
+            cancel_sim = true
+        end
+    else
+        mkpath(folderpath)
+        @info "Folder $folderpath was created."
+    end
+
+    return folderpath, cancel_sim
+end
 
 
 
 
+"""
+    SimData(sim_para::SimPara, 
+            data::Array{Float32,3})
 
+Container for SpeedyWeather.jl simulation data and corresponding simulation parameter, see constructor for details.
 
-
+# Fields
+- `sim_para::SimPara`: Simulation parameters for data generation.
+- `data::Array{Float32,3}`: Data storage, where `data` = (n_coeff) x `n_steps` x `n_ic`, where
+    (n_coeff) is the number of spectral coefficients (real and imaginary part), e.g. for `trunc`=5: n_coeff=54
+"""
+struct SimData
+    sim_para::SimPara
+    data::Array{Float32, 3}
+end
 
 
 """
@@ -150,9 +168,10 @@ save_sim_data(sim_data)
 ```
 """
 function save_sim_data(sim_data::SimData)
-    filepath = create_sim_DIR(sim_para = sim_data.sim_para)      # Create the storage DIR
+    folder_path = create_sim_DIR(sim_data.sim_para)      # Create the storage DIR
+    file = normpath(joinpath(folder_path, ".jld2"))
 
-    jldsave(filepath; sim_data)                                 # Save the simulation data
+    jldsave(file; sim_data)                                 # Save the simulation data
     @info "Simulation data saved at: $filepath"                 # Information, if and where the data is saved
 
     return nothing
@@ -180,9 +199,10 @@ sim_data_loaded = load_sim_data(sim_para)
 ```
 """
 function load_sim_data(sim_para::SimPara)                        
-    filepath = create_sim_DIR(sim_para = sim_para)              # Create the storage DIR
+    folder_path = create_sim_DIR(sim_para)      # Create the storage DIR
+    file = normpath(joinpath(folder_path, ".jld2"))             # Create the storage DIR
 
-    sim_data = JLD2.load(filepath, "sim_data")                  # Load the simulation data
+    sim_data = JLD2.load(file, "sim_data")                  # Load the simulation data
     @info "Simulation data $filepath loaded"                    # Information, if and from where the data is loaded
 
     return sim_data
@@ -206,40 +226,11 @@ function create_sim_DIR(sim_para::SimPara)
         "T$(sim_para.trunc)_" *                                         
         "nsteps$(sim_para.n_steps)_" *
         "IC$(sim_para.n_ic)_" *
-        "key$(sim_para.storage_key).jld2"
+        "key$(sim_para.storage_key)"
     filepath = normpath(joinpath(dir, filename))
 
     return filepath
 end
-
-
-
-
-
-
-function create_sim_folder(sim_para::SimPara; overwrite::Bool=false)
-    folderpath = create_sim_DIR(sim_para)
-
-    cancel_sim = false
-    if isdir(folderpath)
-        @warn "Simulation data with trunc=$(sim_para.trunc), n_steps=$(sim_para.n_steps), n_ic=$(sim_para.n_ic) and key=$(sim_para.storage_key) already exists!"
-        
-        if overwrite
-            rm(folderpath; recursive=true, force=true)
-            mkpath(folderpath)
-            @info "Folder $folderpath was overwritten."
-        else
-            @info "Folder $folderpath stays untouched. Set parameter overwrite::String = 'true' to overwrite the existing folder or use a key!"
-            cancel_sim = true
-        end
-    else
-        mkpath(folderpath)
-        @info "Folder $folderpath was created."
-    end
-
-    return folderpath, cancel_sim
-end
-
 
 
 end

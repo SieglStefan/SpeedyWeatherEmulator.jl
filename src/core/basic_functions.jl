@@ -40,3 +40,5 @@ function calc_n_coeff(;trunc::Int64)
 
     return n_coeff-1
 end
+
+end
