@@ -12,7 +12,7 @@ Private = false
 ## IO
 ```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = [   "src/io/utils.jl.jl", 
+Pages = [   "src/io/utils_io.jl", 
             "src/io/io.jl"]
 Order = [:type, :function]
 Private = false
