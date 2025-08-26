@@ -69,3 +69,19 @@ plot_vor_heatmap(tm(vec0),5)
 plot_vor_heatmap(vec2, 5)
 plot_vor_heatmap(vec3, 5)
 plot_vor_heatmap(tm(vec2),5)
+
+
+
+
+
+
+
+display(plot_losses(losses))
+
+vor0 = sim_data.data[:,5,500]
+vorSW = sim_data.data[:,6,500]
+vorEM = em(vor0)
+
+for vor in [vor0, vorSW, vorEM]
+    display(plot_heatmap(vor, trunc=5))
+end

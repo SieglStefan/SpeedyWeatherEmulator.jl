@@ -1,33 +1,30 @@
-1) ✅Rename datatypes, structs, fields, functions,...
-    Thursday
-2) ✅Rewrite the objects with full names, e.g. SpeedyWeatherEmulator.BasicStructs
-    Friday
-3) ✅Check the different imports and dependencies (e.g.: is "using JLD2" here really needed?)
-    Friday
+sim_para = SimPara(trunc=5, n_data=30, n_ic=300)
 
-4) ✅Test all functions for bugs
-    Friday
-5) ✅Test the quality of output of the AI model
-    Saturday
-6) ✅Update docstrings
-    Monday
+generate_raw_data(sim_para)
 
-7) ❌Write first drafts of the documentation
-    Monday
-8) ❌Finish first draft
-    Monday/Tuesday
-    
-9) Write tests
-    ???
-10) Add more functionality (e.g. more forecast steps, hyperparameter optimation,...)
-    ???
+sim_data = SimData(sim_para)
+fd = FormattedData(sim_data)
+
+nn = NeuralNetwork()
+em, losses = train_emulator(nn, fd)
+
+display(plot_losses(losses))
+
+vor0 = sim_data.data[:,15,300]
+vorSW = sim_data.data[:,16,300]
+vorEM = em(vor0)
+
+for vor in [vor0, vorSW, vorEM]
+    display(plot_heatmap(vor, trunc=5))
+end
 
 
 
 
 
-sim_para = SimPara(trunc=5, n_data=10, n_ic=50, id_key="_test")
-#generate_raw_data(sim_para)
+sim_para = SimPara(trunc=5, n_data=10, n_ic=50)
+
+generate_raw_data(sim_para)
 sim_data = SimData(sim_para)
 #p = plot_forecast_test(sim_data)
 #display(p)

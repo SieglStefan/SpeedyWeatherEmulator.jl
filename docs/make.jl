@@ -25,17 +25,18 @@ makedocs(
         canonical = "https://SieglStefan.github.io/SpeedyWeatherEmulator.jl",
         edit_link = "main",  
         assets    = String[],
+        collapselevel = 2,
     ),
     pages = [
-        "Home"               => "index.md",
-        "Quick installation" => "man/quickstart.md",
-        "Theory"             => "man/theory.md",
-        "Functions & Types"  => "man/api.md",
+        "Home"                                  => "index.md",
+        "Running SpeedyWeatherEmulator.jl"      => "running.md",
+        "Examples"                              => "ex.md",
+        "Functions & Types index"               => "api.md",
     ],
 )
 
-# --- Deployment nach GitHub Pages ---
+
 deploydocs(
     repo      = "github.com/SieglStefan/SpeedyWeatherEmulator.jl",
-    devbranch = "main",   # dein default branch
+    devbranch = "main",
 )
