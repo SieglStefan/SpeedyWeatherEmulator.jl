@@ -1,24 +1,34 @@
-module PlotLosses
+using Plots
 
-using JLD2, Plots, Statistics
-using ..BasicStructs
-using ..ModelStructs
-using ..ModelDataHandling
-
-
-export plot_losses
 
 
 """
-    plot_losses(losses::Losses)  
+    plot_losses(losses::Losses)
 
-Plots the losses stored in `losses`.
+Plot training and validation losses stored in a `Losses` container.
+
+# Description
+- Plots training loss per batch (log-log scale).
+- Adds epoch-averaged training and validation loss curves.
+- Returns a `Plots.Plot` object for further customization or saving.
 
 # Arguments
-- `losses::Losses`: Stores the losses, which are plotted.
+- `losses::Losses`: Container with training/validation loss history and number of batches per epoch.
 
 # Returns
-- `p`:              Plot of the losses.
+- `p::Plots.Plot`: Combined plot of training and validation losses.
+
+# Notes
+- Training batches per epoch = `losses.bpe_train`.
+- Validation batches per epoch = `losses.bpe_valid`.
+- Number of epochs is inferred as `length(losses.train) / bpe_train`.
+
+# Examples
+```julia
+emu, losses = train_emulator(nn, fd)
+p = plot_losses(losses)
+display(p)  
+```
 """
 function plot_losses(losses::Losses)
 
@@ -30,23 +40,19 @@ function plot_losses(losses::Losses)
 
 
     # Plotting the training loss per batch
-    p = plot(losses.train; xaxis=(:log10, "batches"),
+    p = Plots.plot(losses.train; xaxis=(:log10, "batches"),
         yaxis=(:log10, "loss"), label="training loss per batch", title="Losses of the emulator")
 
     # Plotting the training loss per epoch
-    plot!(bpe_t:bpe_t:length(losses.train), 
+    Plots.plot!(bpe_t:bpe_t:length(losses.train), 
         mean.(Iterators.partition(losses.train, bpe_t)),
-        label="training epoch mean", dpi=200, lw=3)
+        label="training loss epoch mean", dpi=200, lw=3)
 
     # Plotting the validation loss per epoch
-    plot!(bpe_t:bpe_t:length(losses.train),
+    Plots.plot!(bpe_t:bpe_t:length(losses.train),
         mean.(Iterators.partition(losses.valid, bpe_v)),
-        label="validaiton epoch mean", dpi=800, lw=3, color=:black)
+        label="validation loss epoch mean", dpi=800, lw=3, color=:black)
 
 
     return p
-end
-
-
-
 end
