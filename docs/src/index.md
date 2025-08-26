@@ -1,6 +1,6 @@
-@meta
+```@meta
 CurrentModule = SpeedyWeatherEmulator
-@end
+```
 
 # SpeedyWeatherEmulator.jl
 
@@ -8,9 +8,10 @@ Ein Emulator für das barotrope SpeedyWeather-Modell mit neuronalen Netzen und T
 
 ## Inhalt
 
-@contents
+```@contents
 Pages = ["man/quickstart.md", "man/theory.md", "man/api.md"]
 Depth = 2
-@end
+```
 
-@index
+```@index
+```

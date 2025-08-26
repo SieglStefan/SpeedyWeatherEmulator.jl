@@ -1,49 +1,50 @@
 # Functions & Types
 
 ## Core
-@autodocs
+```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = ["src/core/basic_structs.jl", "src/core/utils.jl"]
+Pages = [   "src/core/basic_structs.jl", 
+            "src/core/utils.jl"]
 Order = [:type, :function]
 Private = false
-@end
+```
 
-## Data I/O
-@autodocs
+## IO
+```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = ["src/data/generate_raw_data.jl", "src/data/io.jl"]
+Pages = [   "src/io/utils.jl.jl", 
+            "src/io/io.jl"]
 Order = [:type, :function]
 Private = false
-@end
+```
 
-## Formatting / Utils
-@autodocs
+## Data
+```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = ["src/formatting/zscore.jl", "src/formatting/coeff_tools.jl"]
+Pages = [   "src/data/generate_raw_data.jl", 
+            "src/data/build_sim_data.jl",
+            "src/data/format_sim_data.jl"]
 Order = [:type, :function]
 Private = false
-@end
+```
 
 ## Emulator
-@autodocs
+```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = ["src/emulator/neural_network.jl", "src/emulator/emulator.jl", "src/emulator/losses.jl"]
+Pages = [   "src/emulator/zscore_trafo.jl", 
+            "src/emulator/emulator_structs.jl",
+            "src/emulator/compare_emulator.jl",
+            "src/emulator/train_emulator.jl"]
 Order = [:type, :function]
 Private = false
-@end
+```
 
-## Training & Evaluation
-@autodocs
+## Evaluation
+```@autodocs
 Modules = [SpeedyWeatherEmulator]
-Pages = ["src/training/train_emulator.jl", "src/evaluation/compare_emulator.jl"]
+Pages = [   "src/evaluation/_plot_forecast_test.jl", 
+            "src/evaluation/plot_losses.jl",
+            "src/evaluation/plot_heatmap.jl"]
 Order = [:type, :function]
 Private = false
-@end
-
-## Plotting
-@autodocs
-Modules = [SpeedyWeatherEmulator]
-Pages = ["src/plotting/plots.jl"]
-Order = [:type, :function]
-Private = false
-@end
+```
