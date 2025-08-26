@@ -18,7 +18,7 @@ The package is designed to streamline the workflow from simulation to machine le
 ## Contents
 
 ```@contents
-Pages = ["man/quickstart.md", "man/theory.md", "man/api.md"]
+Pages = ["running.md", "ex.md", "api.md"]
 Depth = 2
 ```
 
@@ -29,10 +29,11 @@ Planned implementations:
 
 - Implementing code for further testing:
     - Emulator quality for Rossby-Haurwitz wave i.c. (as report results / example)
-    - Emulator quality for multiple consecutive time steps (e.g. 12 * 1h) (as package function + report reults)
-    - (if time left: Emulator quality for different simulation data parameters (e.g. for higher truncation) (as report results / example))
-- (if time left: Implementing (simple) hyperparameter optimization (as package function))
+    - Emulator quality for multiple consecutive time steps (e.g. 12 * 1h) (as package function + report results)
+    - \*\*\*Emulator quality for different simulation data parameters (e.g. for higher truncation) (as report results / example)
+- \*\*\*Implementing a (simple) hyperparameter optimization (as package function + report results)
 
+(\*\*\*: if not necessary and no time is left until the deadline)
 
 ToDos:
 
@@ -48,7 +49,4 @@ ToDos:
 ```julia
 using Pkg
 Pkg.add(url="https://github.com/SieglStefan/SpeedyWeatherEmulator.jl")
-```
-
-```@index
 ```

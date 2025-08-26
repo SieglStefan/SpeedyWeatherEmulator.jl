@@ -1,4 +1,4 @@
-# Functions & Types
+# Functions & Types index
 
 
 ## Core

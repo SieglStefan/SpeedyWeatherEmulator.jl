@@ -49,7 +49,7 @@ The recorded losses can then be visualized:
 display(plot_losses(losses))
 ```
 
-```![Loss curves](assets/doc_basicworkflow_lossplot.png)```
+![Loss curves](assets/doc_basicworkflow_lossplot.png)
 
 Finally, we can directly compare emulator predictions with SpeedyWeather.jl outputs. Here we select one vorticity state (`vor0`), its SpeedyWeather forecast (`vorSW`), and the emulator’s prediction (`vorEM`) after three steps. 
 
@@ -69,11 +69,11 @@ plot_heatmap(vorEM, trunc=5, title="Predicted Emulator Vorticity vorEM")
 
 resulting in:
 
-```![Initial Vorticity vor0](assets/dpc_basicworkflow_vor0.png)```
+![Initial Vorticity vor0](assets/doc_basicworkflow_vor0.png)
 
-```![Real SpeedyWeather.jl Vorticity vorSW](assets/dpc_basicworkflow_vorSW.png)```
+![Real SpeedyWeather.jl Vorticity vorSW](assets/doc_basicworkflow_vorSW.png)
 
-```![Predicted Emulator Vorticity vorEM](assets/dpc_basicworkflow_vorEM.png)```
+![Predicted Emulator Vorticity vorEM](assets/doc_basicworkflow_vorEM.png)
 
 The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the real SpeedyWeather.jl data reasonably well.
 
