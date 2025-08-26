@@ -1,7 +1,5 @@
 module SpeedyWeatherEmulator
 
-using SpeedyWeather
-
 # core
 include("core/basic_structs.jl")
 include("core/utils.jl")
@@ -34,11 +32,6 @@ include("evaluation/plot_forecast_test.jl")
 include("evaluation/plot_losses.jl")
 include("evaluation/plot_heatmap.jl")
 export plot_losses, plot_forecast_test, vec_to_ltm, plot_heatmap
-
-#export myfuncs
-
-# optional pre-comp
-
 
 end
 
