@@ -88,7 +88,7 @@ function compare_emulator(em::Emulator;
 
     # Prints mean relative error for every coefficient
     if all_coeff
-        for i in 1:length(mean_rel_err)
+        for i in 1:axis(mean_rel_err)
             # Some coefficients are always zero (in sim_data)
             if all(abs.(vor_sw[i, :]) .< eps(Float32))          
                 println("coeff $i: rel. error = ",

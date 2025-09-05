@@ -1,52 +1,72 @@
-```@meta
-CurrentModule = SpeedyWeatherEmulator
-```
-
-# SpeedyWeatherEmulator.jl
-
-The SpeedyWeatherEmulator.jl project provides a framework for generating, processing, and emulating spectral vorticity data from the barotropic model in SpeedyWeather.jl.
-
-It enables users to:
-- configure and run controlled weather simulations,
-- store and format spectral coefficients into training-ready datasets,
-- train neural network emulators with normalization and logging (Emulator, train_emulator, Losses), and
-- evaluate emulator performance against SpeedyWeather baselines with error metrics and visualizations.
-
-The package is designed to streamline the workflow from simulation to machine learning surrogate modeling, making it easier to test neural network approaches for atmospheric dynamics.
+# Functions & Types index
 
 
-## Contents
+## Core
 
-```@contents
-Pages = ["running.md", "ex.md", "api.md"]
-Depth = 2
+Defines the fundamental data structure (`SimPara`) describing  how simulation data is parameterized. Further it contains helpful utility functions (`calc_n_coeff`, `is_coeff_zero`).
+
+```@autodocs
+Modules = [SpeedyWeatherEmulator]
+Pages = [   "src/core/basic_structs.jl", 
+            "src/core/utils.jl"]
+Order = [:type, :function]
+Private = false
 ```
 
 
-## Planned implementations / ToDos:
+## IO
 
-Planned implementations:
+Provides functions for handling data. Including creating data paths (`data_path`), deleting data (`delete_data`), and saving/loading data (`save_data`, `load_data`) for specific types.
 
-- Implementing code for further testing:
-    - Emulator quality for Rossby-Haurwitz wave i.c. (as report results / example)
-    - Emulator quality for multiple consecutive time steps (e.g. 12 * 1h) (as package function + report results)
-    - \*\*\*Emulator quality for different simulation data parameters (e.g. for higher truncation) (as report results / example)
-- \*\*\*Implementing a (simple) hyperparameter optimization (as package function + report results)
-
-(\*\*\*: if not necessary and no time is left until the deadline)
-
-ToDos:
-
-- Writing test functions (not yet done, since the program's basic structure has only recently been set up)
-- Checking the code quality (e.g. right types, type stability,...)
-- Thorough testing of the emulator under various conditions to obtain results for the report
-- Completion and revision of docstrings and code comments
-- Completion and revision of GitHub documenation
-- Writing the project report
+```@autodocs
+Modules = [SpeedyWeatherEmulator]
+Pages = [   "src/io/utils_io.jl", 
+            "src/io/io.jl"]
+Order = [:type, :function]
+Private = false
+```
 
 
-## Installation
-```julia
-using Pkg
-Pkg.add(url="https://github.com/SieglStefan/SpeedyWeatherEmulator.jl")
+## Data
+
+Handles data generation and preparation. This includes creating raw simulation data with SpeedyWeather.jl (`generate_raw_data`), wrapping it into structured containers (`SimData`), and formatting it into train/validation/test sets (`DataPairs`, `FormattedData`).
+
+```@autodocs
+Modules = [SpeedyWeatherEmulator]
+Pages = [   "src/data/generate_raw_data.jl", 
+            "src/data/build_sim_data.jl",
+            "src/data/format_sim_data.jl"]
+Order = [:type, :function]
+Private = false
+```
+
+
+## Emulator
+
+Handles emulator definition, normalization, training, and evaluation.
+This includes Z-score normalization utilities (`ZscorePara`, `zscore`, `inv_zscore`), core emulator types (`NeuralNetwork`, `Emulator`, `Losses`), training workflow (`train_emulator`), and evaluation against SpeedyWeather.jl reference data (`compare_emulator`).
+
+```@autodocs
+Modules = [SpeedyWeatherEmulator]
+Pages = [   "src/emulator/zscore_trafo.jl", 
+            "src/emulator/emulator_structs.jl",
+            "src/emulator/compare_emulator.jl",
+            "src/emulator/train_emulator.jl"]
+Order = [:type, :function]
+Private = false
+```
+
+
+## Evaluation
+
+Handles evaluation and visualization of emulator and simulation output.
+This includes plotting forecast stability for SpeedyWeather.jl runs (`plot_forecast_test`), plotting loss plots (`plot_losses`), and reconstructing vorticity fields from spectral coefficients as heatmaps (`plot_heatmap`).
+
+```@autodocs
+Modules = [SpeedyWeatherEmulator]
+Pages = [   "src/evaluation/plot_forecast_test.jl", 
+            "src/evaluation/plot_losses.jl",
+            "src/evaluation/plot_heatmap.jl"]
+Order = [:type, :function]
+Private = false
 ```

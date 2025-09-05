@@ -28,10 +28,10 @@ makedocs(
         collapselevel = 2,
     ),
     pages = [
-        "Home"                                  => "index.md",
-        "Running SpeedyWeatherEmulator.jl"      => "running.md",
-        "Examples"                              => "ex.md",
-        "Functions & Types index"               => "api.md",
+        "Home"                                  => "home.md",
+        "Running SpeedyWeatherEmulator.jl"      => "running_SWE.md",
+        "Examples"                              => "examples.md",
+        "Functions & Types index"               => "index.md",
     ],
 )
 
