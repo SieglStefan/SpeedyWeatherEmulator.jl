@@ -28,7 +28,7 @@ makedocs(
         collapselevel = 2,
     ),
     pages = [
-        "Home"                                  => "home.md",
+        "Home"                                  => "index.md",
         "Running SpeedyWeatherEmulator.jl"      => "running_SWE.md",
         "Examples"                              => "examples.md",
         "Functions & Types index"               => "functions_index.md",
