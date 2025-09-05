@@ -7,6 +7,7 @@ using Statistics
                      x_test::Matrix{Float32},
                      y_test::Matrix{Float32},
                      n_it::Int64=1,
+                     output::Bool=false,
                      all_coeff::Bool=false)
 
 Compare emulator predictions against SpeedyWeather.jl reference data.
@@ -23,6 +24,7 @@ Compare emulator predictions against SpeedyWeather.jl reference data.
 - `x_test::Matrix{Float32}`: Test inputs (vorticity coefficients at t) of form (2 * n_coeff, N).
 - `y_test::Matrix{Float32}`: Reference outputs from SpeedyWeather.jl (at t+n_it*Δt) of form (2 * n_coeff, N).
 - `n_it::Int64`: Number of timesteps compared.
+- `output::Bool=false`: If true, print errors to STDOUT.
 - `all_coeff::Bool=false`: If true, print relative error for each coefficient.
 
 # Returns
@@ -47,6 +49,7 @@ function compare_emulator(em::Emulator;
                             x_test::Matrix{Float32},
                             y_test::Matrix{Float32},
                             n_it::Int64=1,
+                            output::Bool=false,
                             all_coeff::Bool=false)
     
 
@@ -81,24 +84,27 @@ function compare_emulator(em::Emulator;
     max_mean_rel = maximum(mean_rel_err)
 
     # Print results
-    println("--------------------------------------")
-    println("Mean relative error: ", round(mean_mean_rel; digits=3), " %")
-    println("Max relative error:  ", round(max_mean_rel; digits=3), " %")
-    println("--------------------------------------")
 
-    # Prints mean relative error for every coefficient
-    if all_coeff
-        for i in 1:axis(mean_rel_err)
-            # Some coefficients are always zero (in sim_data)
-            if all(abs.(vor_sw[i, :]) .< eps(Float32))          
-                println("coeff $i: rel. error = ",
-                    round(mean_rel_err[i]; digits=3), " %, ", "\t (SW coeff. is always 0!!!)")
-            else
-                println("coeff $i: rel. error = ",
-                    round(mean_rel_err[i]; digits=3), " %, ",)
-            end
-        end
+    if output
         println("--------------------------------------")
+        println("Mean relative error: ", round(mean_mean_rel; digits=3), " %")
+        println("Max relative error:  ", round(max_mean_rel; digits=3), " %")
+        println("--------------------------------------")
+
+        # Prints mean relative error for every coefficient
+        if all_coeff
+            for i in 1:axis(mean_rel_err)
+                # Some coefficients are always zero (in sim_data)
+                if all(abs.(vor_sw[i, :]) .< eps(Float32))          
+                    println("coeff $i: rel. error = ",
+                        round(mean_rel_err[i]; digits=3), " %, ", "\t (SW coeff. is always 0!!!)")
+                else
+                    println("coeff $i: rel. error = ",
+                        round(mean_rel_err[i]; digits=3), " %, ",)
+                end
+            end
+            println("--------------------------------------")
+        end
     end
 
     return mean_mean_rel

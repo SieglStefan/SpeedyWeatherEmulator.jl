@@ -31,7 +31,7 @@ makedocs(
         "Home"                                  => "home.md",
         "Running SpeedyWeatherEmulator.jl"      => "running_SWE.md",
         "Examples"                              => "examples.md",
-        "Functions & Types index"               => "index.md",
+        "Functions & Types index"               => "functions_index.md",
     ],
 )
 

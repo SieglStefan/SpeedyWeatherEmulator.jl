@@ -113,6 +113,7 @@ Container for logging training, validation, and test losses.
 - `bpe_train::Int64`: Batches per epoch (training set).
 - `bpe_valid::Int64`: Batches per epoch (validation set).
 - `bpe_test::Int64`: Batches per epoch (test set).
+- `training_time`: Time needed for training the model in seconds.
 """
 struct Losses
     sim_para::SimPara
@@ -122,6 +123,7 @@ struct Losses
     bpe_train::Int64     
     bpe_valid::Int64
     bpe_test::Int64
+    training_time::Float64
 end
 
 
@@ -138,5 +140,5 @@ Constructor for an empty `Losses` container.
 # Returns
 - `::Losses`: Initialized container with empty loss vectors and `bpe_test = 0`.
 """
-Losses(sim_para::SimPara, bpe_train::Int64, bpe_valid::Int64) = Losses(sim_para, Float32[], Float32[], Float32[], bpe_train, bpe_valid, 0)
+Losses(sim_para::SimPara, bpe_train::Int64, bpe_valid::Int64) = Losses(sim_para, Float32[], Float32[], Float32[], bpe_train, bpe_valid, 0, 0.0)
 

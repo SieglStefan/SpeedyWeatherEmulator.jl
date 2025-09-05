@@ -122,16 +122,15 @@ The raw output is then loaded into a consistent array layout using the `SimData`
 sim_data = SimData(sim_para)
 ```
 
-The resulting tensor has dimensions XXX DIMENSIONS where real and imaginary parts of the spectral coefficients are stacked along the first axis.
+The resulting tensor has dimensions \[\text{data} \in \mathbb{R}^{(2 \cdot n_\text{coeff}) \times n_\text{data} \times n_\text{ic}}\] where real and imaginary parts of the spectral coefficients are stacked along the first axis.
 This format is optimized for efficient slicing over time and initial conditions, and serves as the basis for all later steps.
 
 ### Preparing Formatted Data
 For machine learning, we need to turn continuous time series into input–output pairs.
-The `FormattedData` constructor automates this process by pairing consecutive timesteps: XXX TIMESTEP VECKTOR
+The `FormattedData` constructor automates this process by pairing consecutive timesteps:
 
 ```math
-\frac{\partial \zeta}{\partial t} + \nabla \cdot (\mathbf{u}(\zeta + f)) =
-F_\zeta + \nabla \times \mathbf{F}_\mathbf{u} + (-1)^{n+1}\nu\nabla^{2n}\zeta
+(x, y) = \bigl( \mathrm{vor}(t), \, \mathrm{vor}(t + \Delta t) \bigr)
 ```
 
 It then reshapes all samples into column vectors and splits the dataset into training, validation, and test sets.
@@ -165,7 +164,9 @@ Before training, spectral coefficients are normalized coefficient-wise to zero m
 This is achieved with a `ZscorePara` struct, which stores the mean and standard deviation of the training set.
 Normalization is always based on the training data alone to avoid information leakage.
 
-XXX EQUATION ZSCORE
+```math
+z_i = \frac{x_i - \mu_i}{\sigma_i}
+```
 
 The emulator applies this transformation automatically when called
 
@@ -285,6 +286,8 @@ emu, losses = train_emulator(nn, fd)
 plot_losses(losses; title="Training history (T5)")
 ```
 
+![Loss Plot](assets/doc_evaluation_lossplot.png)
+
 The number of epochs is inferred automatically from the batch size and dataset split.
 The returned plot object can be further customized or saved using the standard Plots.jl interface.
 
@@ -296,6 +299,8 @@ This requires specifying the spectral truncation to interpret the coefficient la
 vec = rand(Float32, 54)     # random coeffs for trunc=5
 plot_heatmap(vec; trunc=5, title="Random vorticity field")
 ```
+
+![Heatmap Plot](assets/doc_evaluation_heatmap.png)
 
 Internally, the coefficients are converted into a lower-triangular matrix and then transformed into a physical-space grid.
 The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state.

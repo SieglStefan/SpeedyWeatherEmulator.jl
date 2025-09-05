@@ -6,7 +6,7 @@ This section contains the code used to produce the results presented in the repo
 ## Hyperparameter Optimization
 _Under Construction_
 
-## Long forecasts
+## Long forecast quality
 _Under Construction_
 
 ## Rossby-Haurwitz wave
