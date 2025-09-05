@@ -9,6 +9,8 @@ Creates the folder or file path for storing data associated with `sim_para`.
 # Arguments
 - `sim_para::SimPara`: Simulation parameters (used to build unique name).
 - `type::String`: Data type; `"raw_data"`, `"sim_data"`, `"emulator"` or `"losses"`.
+- `path::String = ""`: Optional absolute path for data storage.  
+    If left empty, the function defaults to the package's internal `data/<type>` folder.  
 
 # Returns
 - `::String`: Absolute normalized path to the storage location.
@@ -24,8 +26,12 @@ data_path(sim_para; type="sim_data")
 # → ".../data/sim_data/sim_data_T5_ndata50_IC200_IDdemo.jld2"
 ```
 """
-function data_path(sim_para::SimPara; type::String)
-    folder = joinpath(@__DIR__, "..", "..", "data", type)
+function data_path(sim_para::SimPara; type::String, path::String="")
+    if path === ""
+        folder = joinpath(@__DIR__, "..", "..", "data", type)
+    else
+        folder = path
+    end
     
     if type in ["raw_data"]
         file_ex = ""
@@ -58,6 +64,8 @@ Delete existing data of `type` `"raw_data"`, `"sim_data"`, `"emulator"` or `"los
 - `sim_para::SimPara`: Simulation parameters (used for identifying data).
 - `type::String`: Data type; `"raw_data"`, `"sim_data"`, `"emulator"`, `"losses"`.
 - `overwrite::Bool = false`: Control overwrite behavior.
+- `path::String = ""`: Optional absolute path for data storage.  
+    If left empty, the function defaults to the package's internal `data/<type>` folder.  
 
 # Returns
 - `path::String`: Target folder/file path.
@@ -73,8 +81,8 @@ sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="test")
 delete_data(sim_para; type="sim_data")
 ```
 """
-function delete_data(sim_para::SimPara; type::String, overwrite::Bool=false)
-    data = data_path(sim_para, type=type)
+function delete_data(sim_para::SimPara; type::String, overwrite::Bool=false, path::String="")
+    data = data_path(sim_para, type=type, path=path)
 
     cancel_sim = false
     if isdir(data) || isfile(data)

@@ -1,6 +1,5 @@
 using Plots
-
-
+using Statistics
 
 """
     plot_losses(losses::Losses)
@@ -14,6 +13,7 @@ Plot training and validation losses stored in a `Losses` container.
 
 # Arguments
 - `losses::Losses`: Container with training/validation loss history and number of batches per epoch.
+- `title::String="Losses of the emulator"`: Optional argument for different plot titles (e.g. differen simulation parameters).
 
 # Returns
 - `p::Plots.Plot`: Combined plot of training and validation losses.
@@ -30,7 +30,7 @@ p = plot_losses(losses)
 display(p)  
 ```
 """
-function plot_losses(losses::Losses)
+function plot_losses(losses::Losses; title::String="Losses of the emulator")
 
     # Printing information
     bpe_t = losses.bpe_train
@@ -41,7 +41,7 @@ function plot_losses(losses::Losses)
 
     # Plotting the training loss per batch
     p = Plots.plot(losses.train; xaxis=(:log10, "batches"),
-        yaxis=(:log10, "loss"), label="training loss per batch", title="Losses of the emulator")
+        yaxis=(:log10, "loss"), label="training loss per batch", title=title)
 
     # Plotting the training loss per epoch
     Plots.plot!(bpe_t:bpe_t:length(losses.train), 

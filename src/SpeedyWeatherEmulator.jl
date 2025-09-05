@@ -28,10 +28,13 @@ include("io/io.jl")
 export save_data, load_data
 
 # evaluation
-include("evaluation/plot_forecast_test.jl")
 include("evaluation/plot_losses.jl")
 include("evaluation/plot_heatmap.jl")
-export plot_losses, plot_forecast_test, vec_to_ltm, plot_heatmap
+export plot_losses, vec_to_ltm, plot_heatmap
+
+
+
+
 
 end
 

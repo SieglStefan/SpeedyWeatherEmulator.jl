@@ -27,14 +27,14 @@ sim_data = SimData(sim_para)
 fd = FormattedData(sim_data)
 ```
 
-Next, we define a neural network architecture and train it on the formatted data. This produces both an `Emulator` (the trained model) and a `Losses` object that tracks training progress.
+Next, a neural network architecture is defined and trained on the formatted data. This produces both an `Emulator` (the trained model) and a `Losses` object that tracks training progress.
 
 ```julia
 nn = NeuralNetwork()
 em, losses = train_emulator(nn, fd)
 ```
 
-After the training, the mean relative error and max relative error for one step are printed to STDOUT, e.g.:
+After the training, the mean relative error and max relative error for one step are printed to STDOUT:
 
 ```text
 --------------------------------------

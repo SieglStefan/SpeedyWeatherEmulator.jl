@@ -16,6 +16,8 @@ Save simulation- or training-related data (`SimData`, `Emulator`, `Losses`) usin
 - `data::Union{SimData, Emulator, Losses}`: The container to save.  
   Must have a field `sim_para::SimPara`.
 - `overwrite::Bool = false`: If true, existing file/folder is deleted before writing.
+- `path::String = ""`: Optional absolute path for data saving.
+    If left empty, the function defaults to the package's internal `data/<type>` folder.  
 
 # Returns
 - `nothing`: Data is written to the file system.
@@ -31,7 +33,7 @@ sim_data = SimData(sim_para)
 save_data(sim_data; type="sim_data", overwrite=true)
 ```
 """
-function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false)
+function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false, path::String="")
     
     data_type = typeof(data)
 
@@ -46,7 +48,7 @@ function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false
     end
 
     sim_para = data.sim_para
-    data_path, cancel_sim = delete_data(sim_para, overwrite=overwrite, type=type)
+    data_path, cancel_sim = delete_data(sim_para, overwrite=overwrite, type=type, path=path)
 
     if cancel_sim
         @error "Data saving was canceled, because data already exists!"
@@ -71,6 +73,8 @@ Load previously saved data of a given type using the defining simulation paramet
 # Arguments
 - `sim_para::SimPara`: Simulation parameters; determines the folder/file name.
 - `type::String`: Dataset type, e.g. `"sim_data"`, `"emulator"`, `"losses"`.
+- `path::String = ""`: Optional absolute path for data loading.
+    If left empty, the function defaults to the package's internal `data/<type>` folder.  
 
 # Returns
 - `::Union{SimData, Emulator, Losses}`: The saved object stored in the JLD2 file under the key `"data"`.  
@@ -85,8 +89,8 @@ sim_para = SimPara(trunc=5, n_data=50, n_ic=200)
 sim_data_loaded = load_data(sim_para; type="sim_data")
 ```
 """
-function load_data(sim_para::SimPara; type::String)     
-    path = data_path(sim_para, type=type)
+function load_data(sim_para::SimPara; type::String, path::String="")     
+    path = data_path(sim_para, type=type, path=path)
     
     file_path = normpath(joinpath(path))             # Create the storage DIR
 

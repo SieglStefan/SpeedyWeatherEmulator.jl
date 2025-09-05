@@ -27,7 +27,7 @@ Train an emulator (neural network) with the given architecture and data.
 - `η0::Real=0.001`: Initial learning rate.
 
 # Returns
-- `emu::Emulator`: Trained emulator model (Flux chain + normalization).
+- `em::Emulator`: Trained emulator model (Flux chain + normalization).
 - `losses::Losses`: Recorded training/validation losses and batches per epoch.
 
 # Notes
@@ -38,7 +38,7 @@ Train an emulator (neural network) with the given architecture and data.
 ```julia
 nn = NeuralNetwork(io_dim=54, hidden_dim=128, n_hidden=2)
 fd = FormattedData(sim_data; splits=(train=0.7, valid=0.2, test=0.1))
-emu, losses = train_emulator(nn, fd; batchsize=64, n_epochs=100, η0=0.0005)
+em, losses = train_emulator(nn, fd; batchsize=64, n_epochs=100, η0=0.0005)
 ```
 """
 function train_emulator(nn::NeuralNetwork, fd::FormattedData; 
@@ -50,7 +50,7 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData;
     zscore_para = ZscorePara(μ, σ)
 
     # Defining the emulator
-    emu = Emulator(nn, zscore_para, fd.sim_para)
+    em = Emulator(nn, zscore_para, fd.sim_para)
 
     # Transforming the training and validation data
     x_train_norm = zscore(fd.data_pairs.x_train, zscore_para)
@@ -68,7 +68,7 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData;
     # Implementing optimiser
     η = η0
     opt = Optimisers.Adam(η)
-    opt_state = Optimisers.setup(opt, emu.chain)
+    opt_state = Optimisers.setup(opt, em.chain)
 
     # Defining the losses
     losses = Losses(fd.sim_para, length(loader_train), length(loader_valid))
@@ -78,11 +78,11 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData;
         # Training loop
         for xy_cpu in loader_train                                  # loop over every batches of loader_train
             x,y = xy_cpu |> gpu                                     # shifting the training data to the GPU
-            loss, grads = Flux.withgradient(emu.chain) do chain      # calculating training losses and gradients
+            loss, grads = Flux.withgradient(em.chain) do chain      # calculating training losses and gradients
                 Flux.mse(chain(x), y)                               
             end
 
-            Optimisers.update!(opt_state, emu.chain, grads[1])       # update the Optimiser
+            Optimisers.update!(opt_state, em.chain, grads[1])       # update the Optimiser
             push!(losses.train, Float32(loss))                      # store the training losses
         end
 
@@ -94,15 +94,15 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData;
 
         # Validation loop
         for (x,y) in loader_valid                                   # loop over every batches of loader_valid
-            loss = Flux.mse(emu.chain(x), y)                         # calculating validation losses
+            loss = Flux.mse(em.chain(x), y)                         # calculating validation losses
             push!(losses.valid, Float32(loss))                      # store the validation losses
         end
     end
 
-    # Compares the emulator with the training set
-    compare_emulator(emu, x_test=fd.data_pairs.x_test, y_test=fd.data_pairs.y_test)
+    # Compares the emulator with the training set for a single timestep.
+    compare_emulator(em, x_test=fd.data_pairs.x_test, y_test=fd.data_pairs.y_test)
 
-    return emu, losses
+    return em, losses
 end
 
 

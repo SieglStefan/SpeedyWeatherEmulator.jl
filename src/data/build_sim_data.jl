@@ -24,7 +24,7 @@ end
 
 
 """
-    SimData(sim_para::SimPara)
+    SimData(sim_para::SimPara, path::String="")
 
 Construct a `SimData` container by **loading previously generated raw data** and
 extracting the spectral vorticity coefficients time series into a consistent tensor layout.
@@ -33,7 +33,7 @@ This constructor:
 1. infers `(n_coeff, n_data, n_ic)` from `sim_para`,
 2. allocates the target array `data::Array{Float32,3}` with shape (2 * `n_coeff`, `n_data`, `n_ic`),
 3. iterates over runs `ic = 1:n_ic`, loads `output.jld2`, and reads `output_vector`,
-4. for each stored step `step ∈ { n_spinup, …, n_spinup + n_data - 1 }`:
+4. for each stored step `step ∈ {n_spinup+1, …, n_spinup + n_data}`:
    - extracts the spectral vorticity `vor`,
    - writes `real(vor)` to rows `1:n_coeff` and `imag(vor)` to rows `n_coeff+1:2n_coeff`,
    - stores at time index `step + 1 - n_spinup`.
@@ -41,6 +41,8 @@ This constructor:
 # Arguments
 - `sim_para::SimPara`: Container for parameters that define the simulation and data storage; 
     **must match** the generated raw data on disk.
+- `path::String = ""`: Optional absolute path of storaged `raw_data`.  
+    If left empty, the function defaults to the package's internal `data/<type>` folder.
 
 # Returns
 - `::SimData`: Container holding simulation data and corresponding sim. parameters.
@@ -52,7 +54,7 @@ This constructor:
 
 # Notes
 - The leading factor `2` in the first dimension stacks real and imaginary parts.
-- The time indexing uses `step + 1 - n_spinup` to map stored steps to `1:n_data`.
+- The time indexing uses `step - n_spinup` to map stored steps to `1:n_data`.
 
 # Examples
 ```julia
@@ -63,7 +65,7 @@ sim_data = SimData(sim_para)
 size(sim_data.data)  # (2*n_coeff, n_data, n_ic)
 ```
 """
-function SimData(sim_para::SimPara)
+function SimData(sim_para::SimPara, path::String="")
 
     # Unpack simulation parameters
     trunc = sim_para.trunc
@@ -76,7 +78,7 @@ function SimData(sim_para::SimPara)
     data = zeros(Float32, 2*n_coeff, n_data, n_ic)  
 
     # Extracting vorticity data from generated raw data
-    raw_data_folder = data_path(sim_para, type="raw_data")
+    raw_data_folder = data_path(sim_para, type="raw_data", path=path)
 
     for ic in 1:n_ic
         # Create filepath
@@ -90,12 +92,12 @@ function SimData(sim_para::SimPara)
 
 
         # Extracting n_data datapoints per initial condition
-        for step in n_spinup:1:n_spinup+n_data-1
+        for step in n_spinup+1:1:n_spinup+n_data
             prog = out[step]
             vor = vec(prog.vor[:,:,1])
 
-            data[1:n_coeff, step+1-n_spinup, ic] .= Float32.(real.(vor))
-            data[n_coeff+1:2*n_coeff, step+1-n_spinup, ic] .= Float32.(imag.(vor))
+            data[1:n_coeff, step-n_spinup, ic] .= Float32.(real.(vor))
+            data[n_coeff+1:2*n_coeff, step-n_spinup, ic] .= Float32.(imag.(vor))
         end
     end
         

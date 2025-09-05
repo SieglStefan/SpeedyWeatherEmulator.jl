@@ -15,10 +15,11 @@ Plot a heatmap of a vorticity field reconstructed from a spectral coefficient ve
 # Arguments
 - `vec::Vector{Float32}`: Spectral coefficient vector (real/imag stacked).
 - `trunc::Int64`: Spectral truncation of the model (e.g. 5 for T5).
-- `title::String=""`: Optional title for the plot.
+- `title::String="Vorticity Heatmap"`: Optional argument for different plot titles (e.g. differen simulation parameters).
+
 
 # Returns
-- `::::CairoMakie.Plot`: Heatmap figure object.
+- `::CairoMakie.Plot`: Heatmap figure object.
 
 # Examples
 ```julia

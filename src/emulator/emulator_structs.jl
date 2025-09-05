@@ -70,11 +70,11 @@ according to the given `NeuralNetwork` specs.
 """
 function Emulator(nn::NeuralNetwork, zscore_para::ZscorePara, sim_para::SimPara)
     
-    chain = Chain(                                          # creates the neural network structure
+    chain = Chain(                                      # creates the neural network structure
         Dense(nn.io_dim => nn.hidden_dim, relu),
         [Dense(nn.hidden_dim => nn.hidden_dim, relu) for _ in 1:(nn.n_hidden-1)]...,
         Dense(nn.hidden_dim => nn.io_dim)
-    ) |> gpu                                                # "sends" the model to the gpu (if available)
+    ) |> gpu                                            # "sends" the model to the gpu (if available)
     return Emulator(sim_para, chain, zscore_para)
 end
 
@@ -94,9 +94,9 @@ at time t to predict coefficients at t + Δt.
 - `::Matrix{Float32}`: Emulator predictions for multiple states, one prediction per column (same shape as input matrix).
 """
 function (m::Emulator)(x::Union{Vector{Float32}, Matrix{Float32}})
-    x_norm = zscore(x, m.zscore_para)               # using Z-score trafo to normalize the spectral coeff. at t
-    y_norm = m.chain(x_norm |> gpu)                 # emulator calculates the normalized spectral coeff. at t + t_step
-    return inv_zscore(y_norm, m.zscore_para) |> cpu       # using inverse Z-score trafo to get (normal) spectral coeff. at t + t_step
+    x_norm = zscore(x, m.zscore_para)                   # using Z-score trafo to normalize the spectral coeff. at t
+    y_norm = m.chain(x_norm |> gpu)                     # emulator calculates the normalized spectral coeff. at t + t_step
+    return inv_zscore(y_norm, m.zscore_para) |> cpu     # using inverse Z-score trafo to get (normal) spectral coeff. at t + t_step
 end
 
 

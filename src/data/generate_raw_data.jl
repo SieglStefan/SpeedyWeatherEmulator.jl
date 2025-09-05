@@ -2,7 +2,7 @@ using SpeedyWeather
 
 
 """
-    generate_raw_data(sim_para::SimPara; overwrite::Bool=false)
+    generate_raw_data(sim_para::SimPara; overwrite::Bool=false, path::String="")
 
 Generate raw vorticity data with SpeedyWeather.jl based on the given simulation parameters.
 
@@ -16,9 +16,11 @@ Generate raw vorticity data with SpeedyWeather.jl based on the given simulation 
 - `sim_para::SimPara`: Container for parameters that define the simulation and data storage.
 - `overwrite::Bool = false`: If true, delete existing data and regenerate.  
     If false, aborts safely when data already exist.
+- `path::String = ""`: Optional absolute path for data storage.  
+    If left empty, the function defaults to the package's internal `data/<type>` folder.
 
 # Returns
-- `nothing`: Data is written in the folder `data_path(sim_para; type="raw_data")`.
+- `::Bool`: Returns a boolean value that indicates if the data was generated successfully.
 
 # Notes
 - Spin-up steps (`n_spinup`) are run but **not stored** in later `SimData`.
@@ -34,7 +36,7 @@ generate_raw_data(sim_para; overwrite=true)
 # → creates data/raw_data/raw_data_T5_ndata50_IC200_ID123/run_0001/output.jld2, ..., run_0200/output.jld2
 ```
 """
-function generate_raw_data(sim_para::SimPara; overwrite::Bool=false)
+function generate_raw_data(sim_para::SimPara; overwrite::Bool=false, path::String="")
     # Unpack simulation parameters
     trunc = sim_para.trunc
     n_data = sim_para.n_data
@@ -45,17 +47,17 @@ function generate_raw_data(sim_para::SimPara; overwrite::Bool=false)
     
     
     # Delete old raw_data folder
-    output_path, cancel = delete_data(sim_para, overwrite=overwrite, type="raw_data")
+    output_path, cancel = delete_data(sim_para, overwrite=overwrite, type="raw_data", path=path)
 
     
     if cancel
         # Do nothing, because overwriting data is not allowed
         @error "Raw data generation was canceled, because data already exists and overwriting is not allowed!"
-        return nothing
+        return false
     elseif cancel == false && (isdir(output_path) || isfile(output_path))
         # Deleting has NOT worked: abort
         @error "Raw data generation was canceled, because already existing data could not be deleted!"
-        return nothing        
+        return false       
     else
         # Create new folder
         mkpath(output_path) 
@@ -74,10 +76,10 @@ function generate_raw_data(sim_para::SimPara; overwrite::Bool=false)
                 set!(sim, vor=initial_cond)             # if specific IC are defined, set the simulation to them
             end
 
-            t_max = (n_spinup + n_data - 1) * t_step     # calculate the whole forecast time
+            t_max = (n_spinup + n_data) * t_step     # calculate the whole forecast time
             run!(sim, period=Hour(t_max), output=true)               # run the simulation
         end
     end
 
-    return nothing
+    return true
 end
