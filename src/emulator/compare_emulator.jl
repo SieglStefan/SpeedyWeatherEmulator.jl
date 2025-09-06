@@ -50,7 +50,8 @@ function compare_emulator(em::Emulator;
                             y_test::Matrix{Float32},
                             n_it::Int64=1,
                             output::Bool=false,
-                            all_coeff::Bool=false)
+                            all_coeff::Bool=false,
+                            id_em::Bool=false)
     
 
     vor_em = x_test                        
@@ -70,8 +71,11 @@ function compare_emulator(em::Emulator;
     vor_sw = vor_sw[:, setdiff(1:end, cols_delete_y)]
 
 
-    for _ in 1:n_it
-        vor_em = em(vor_em)
+
+    if id_em == false
+        for _ in 1:n_it
+            vor_em = em(vor_em)
+        end
     end
 
     

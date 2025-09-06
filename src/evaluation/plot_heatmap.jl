@@ -33,7 +33,7 @@ function plot_heatmap(vec::Vector{Float32}; trunc::Int64, title::String="")
     vor_ltm = vec_to_ltm(vec, trunc)        # calculating the LTM
     vor_grid = transform(vor_ltm)           # transforming the LTM into a plotable grid
 
-    return CairoMakie.heatmap(vor_grid, title=title)
+    return CairoMakie.heatmap(vor_grid, title=title, colorrange=(-200,200))
 end
 
 
