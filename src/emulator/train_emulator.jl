@@ -1,6 +1,5 @@
 using Flux, Optimisers
-using Statistics
-using ProgressMeter
+using Statistics, ProgressMeter
 
 
 
@@ -103,18 +102,12 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData; sim_para::SimPara=
     end
 
     # Reinitialize Losses and emulator
-    losses = Losses(losses0.sim_para,    
-                    losses0.train,
-                    losses0.valid,                
-                    losses0.test,
-                    losses0.bpe_train,
-                    losses0.bpe_valid,
-                    losses0.bpe_test,
-                    train_time)
+    (; sim_para, train, valid, bpe_train, bpe_valid) = losses0
+    losses = Losses(sim_para, train, valid, bpe_train, bpe_valid, train_time)
 
 
     # Compares the emulator with the training set for a single timestep.
-    compare_emulator(em, x_test=fd.data_pairs.x_test, y_test=fd.data_pairs.y_test)
+    compare_emulator(em, x_test=fd.data_pairs.x_test, y_test=fd.data_pairs.y_test, output=true)
 
     return em, losses
 end

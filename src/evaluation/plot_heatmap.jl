@@ -16,7 +16,7 @@ Plot a heatmap of a vorticity field reconstructed from a spectral coefficient ve
 - `vec::Vector{Float32}`: Spectral coefficient vector (real/imag stacked).
 - `trunc::Int64`: Spectral truncation of the model (e.g. 5 for T5).
 - `title::String="Vorticity Heatmap"`: Optional argument for different plot titles (e.g. differen simulation parameters).
-
+- `range::Tuple{Float64,Float64}`: Defines the color range of the heatmap plot.
 
 # Returns
 - `::CairoMakie.Plot`: Heatmap figure object.
@@ -28,12 +28,12 @@ fig = plot_heatmap(vec; trunc=5, title="Vorticity field")
 display(fig)
 ```
 """
-function plot_heatmap(vec::Vector{Float32}; trunc::Int64, title::String="")
+function plot_heatmap(vec::Vector{Float32}; trunc::Int64, title::String="", range::Tuple{Float64,Float64}=(-5e-5, +5e-5))
     
     vor_ltm = vec_to_ltm(vec, trunc)        # calculating the LTM
     vor_grid = transform(vor_ltm)           # transforming the LTM into a plotable grid
 
-    return CairoMakie.heatmap(vor_grid, title=title, colorrange=(-200,200))
+    return CairoMakie.heatmap(vor_grid, title=title, colorrange=range)
 end
 
 

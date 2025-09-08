@@ -37,15 +37,11 @@ generate_raw_data(sim_para; overwrite=true)
 ```
 """
 function generate_raw_data(sim_para::SimPara; overwrite::Bool=false, path::String="")
+
     # Unpack simulation parameters
-    trunc = sim_para.trunc
-    n_data = sim_para.n_data
-    n_ic = sim_para.n_ic
-    n_spinup = sim_para.n_spinup
-    t_step = sim_para.t_step
-    initial_cond = sim_para.initial_cond
-    
-    
+    (; trunc, n_data, n_ic, n_spinup, t_step, initial_cond) = sim_para 
+
+
     # Delete old raw_data folder
     output_path, cancel = delete_data(sim_para, overwrite=overwrite, type="raw_data", path=path)
 

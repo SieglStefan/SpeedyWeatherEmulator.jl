@@ -1,11 +1,12 @@
 using Test
-using Random
 using SpeedyWeatherEmulator
+using Random
+
 
 # Setting seed for reproducibility
 Random.seed!(1234)
 
-@testset "SpeedyWeatherEmulator – Test Suite" begin
+@testset "test_SpeedyWeatherEmulator" begin
     include("test_core.jl")
     include("test_io.jl")
     include("test_data.jl")

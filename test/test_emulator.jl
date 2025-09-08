@@ -3,7 +3,7 @@ using SpeedyWeatherEmulator
 using Flux, Statistics
 
 
-@testset "zscore / inv_zscore" begin
+@testset "test_zscore" begin
     μ = Float32[0, 1]
     σ = Float32[1, 2]
     stats = ZscorePara(μ, σ)
@@ -20,7 +20,7 @@ using Flux, Statistics
 end
 
 
-@testset "Emulator struct basics" begin
+@testset "test_emulator_struct" begin
     sim = SimPara(trunc=5, n_data=2, n_ic=1)
     nn = NeuralNetwork(io_dim=4, hidden_dim=8, n_hidden=2)
     stats = ZscorePara(zeros(Float32, 4), ones(Float32, 4))
@@ -38,7 +38,7 @@ end
 end
 
 
-@testset "compare_emulator simple case" begin
+@testset "test_compare_emulator" begin
     sim = SimPara(trunc=5, n_data=2, n_ic=1)
     nn = NeuralNetwork(io_dim=2, hidden_dim=2, n_hidden=1)
     stats = ZscorePara(zeros(Float32, 2), ones(Float32, 2))
@@ -53,7 +53,7 @@ end
 end
 
 
-@testset "train_emulator tiny" begin
+@testset "test_train_emulator" begin
     sim = SimPara(trunc=5, n_data=5, n_ic=2)   
     n_coeff = calc_n_coeff(trunc=sim.trunc)
 

@@ -2,7 +2,7 @@ using Test
 using SpeedyWeatherEmulator
 using SpeedyWeather
 
-@testset "vec_to_ltm" begin
+@testset "test_vec_to_ltm" begin
     trunc = 5
     n = calc_n_coeff(trunc=trunc)
     vec = rand(Float32, 2*n)

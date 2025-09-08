@@ -2,35 +2,35 @@ using Statistics
 
 
 """
-    ZscorePara(μ::Vector{Float32}, σ::Vector{Float32})
+    ZscorePara{F<:AbstractVector{Float32}}
 
 Container for the parameters of a Z-score transformation.
 
 # Fields
-- `μ::Vector{Float32}`: Mean for each coefficient across samples.
-- `σ::Vector{Float32}`: Std for each coefficient across samples
+- `μ::F`: Mean for each coefficient across samples.
+- `σ::F`: Std for each coefficient across samples.
 
 # Notes
 - Typically computed from the **training set only** to avoid data leakage.
 - For each coefficient indexed i: z_i = (x_i - μ_i) / σ_i
 """
-struct ZscorePara
-    µ::Vector{Float32}
-    σ::Vector{Float32}
+struct ZscorePara{F<:AbstractVector{Float32}}
+    µ::F
+    σ::F
 end
 
 
 """
-    zscore(x, stats::ZscorePara)
+    zscore(x::AbstractArray{Float32}, stats::ZscorePara{<:AbstractVector{Float32}})
 
 Apply a Z-score transformation to data `x` using the parameters in `stats`.
 
 # Arguments
-- `x::AbstractArray`: Input data (rows = coefficients, columns = samples).
-- `stats::ZscorePara`: Parameters with mean μ and std σ.
+- `x::AbstractArray{Float32}`: Input data (rows = coefficients, columns = samples).
+- `stats::ZscorePara{<:AbstractVector{Float32}}`: Parameters with mean μ and std σ.
 
 # Returns
-- `::Array{Float32}`: Z-score normalized data.
+- `::typeof(x)`: Z-score normalized data.
 
 # Notes
 - Each coefficient is transformed independently.
@@ -43,22 +43,22 @@ x = Float32[0 2; 1 3]
 z = zscore(x, stats)
 ```
 """
-function zscore(x::Array{Float32}, stats::ZscorePara)
+function zscore(x::AbstractArray{Float32}, stats::ZscorePara{<:AbstractVector{Float32}})
     return (x .- stats.µ) ./ (stats.σ .+ eps(Float32))
 end
 
 
 """
-    inv_zscore(x::Array{Float32}, stats::ZscorePara)
+    inv_zscore(x::AbstractArray{Float32}, stats::ZscorePara{<:AbstractVector{Float32}})
 
 Inverse Z-score transformation (restore original scale).
 
 # Arguments
-- `x::Array{Float32}`: Z-score normalized data.
-- `stats::ZscorePara`: Parameters with mean μ and std σ.
+- `x::AbstractArray{Float32}`: Z-score normalized data.
+- `stats::ZscorePara{<:AbstractVector{Float32}}`: Parameters with mean μ and std σ.
 
 # Returns
-- `::Array{Float32}`: Data rescaled back to the original distribution.
+- `::typeof(x)`: Data rescaled back to the original distribution.
 
 # Examples
 ```julia
@@ -67,7 +67,7 @@ z = Float32[0 -0.5; 1 0.5]
 x = inv_zscore(z, stats)
 ```
 """
-function inv_zscore(x::Array{Float32}, stats::ZscorePara)
+function inv_zscore(x::AbstractArray{Float32}, stats::ZscorePara{<:AbstractVector{Float32}})
     return x .* stats.σ .+ stats.µ
 end
 

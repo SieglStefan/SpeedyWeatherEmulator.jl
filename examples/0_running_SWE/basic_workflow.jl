@@ -1,7 +1,11 @@
 using SpeedyWeatherEmulator
+using Plots, CairoMakie
+
+# Fix the seed for reproducibility
+Random.seed!(1234)
 
 # Definie simulation parameters
-sim_para = SimPara(trunc=5, n_data=20, n_ic=500, id_key="_basic_workflow")
+sim_para = SimPara(trunc=5, n_data=48, n_ic=300, id_key="_basic_workflow")
 
 # Generate raw simulation data
 generate_raw_data(sim_para)
@@ -14,15 +18,21 @@ fd = FormattedData(sim_data)
 nn = NeuralNetwork()
 em, losses = train_emulator(nn, fd)
 
-# Plot the loss curve for inspection
-display(plot_losses(losses))
+# Plot and save the loss curve for inspection
+p = plot_losses(losses)
+display(p)
+Plots.savefig(p, joinpath(@__DIR__, "plots", "losses_BWF.pdf"))
 
 # Define vorticity for comparison
-vor0 = sim_data.data[:,10,500]
-vorSW = sim_data.data[:,13,500]
+vor0 = sim_data.data[:,20,1]
+vorSW = sim_data.data[:,23,1]
 vorEM = em(em(em(vor0)))
 
-# Plot vorticity heatmaps
-plot_heatmap(vor0, trunc=5, title="Initial Vorticity vor0")
-plot_heatmap(vorSW, trunc=5, title="Real SpeedyWeather.jl Vorticity vorSW")
-plot_heatmap(vorEM, trunc=5, title="Predicted Emulator Vorticity vorEM")
+# Plot and save vorticity heatmaps
+p1 = plot_heatmap(vor0, trunc=5, title="Initial Vorticity vor0")
+p2 = plot_heatmap(vorSW, trunc=5, title="Real SpeedyWeather.jl Vorticity vorSW")
+p3 = plot_heatmap(vorEM, trunc=5, title="Predicted Emulator Vorticity vorEM")
+
+CairoMakie.save(joinpath(@__DIR__, "plots", "vor0_BWF.png"), p1)
+CairoMakie.save(joinpath(@__DIR__, "plots", "vorSW_BWF.png"), p2)
+CairoMakie.save(joinpath(@__DIR__, "plots", "vorEM_BWF.png"), p3)

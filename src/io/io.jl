@@ -1,7 +1,6 @@
 using JLD2
 
 
-
 """
     save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false)
 

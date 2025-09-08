@@ -33,24 +33,24 @@ display(p)
 function plot_losses(losses::Losses; title::String="Losses of the emulator")
 
     # Printing information
-    bpe_t = losses.bpe_train
-    bpe_v = losses.bpe_valid
-    @info "Batches per epoch (in the training set): $bpe_t"
-    @info "Number of epochs: $(Integer(length(losses.train) / bpe_t))"
+    (; train, valid, bpe_train, bpe_valid) = losses
+
+    @info "Batches per epoch (in the training set): $bpe_train"
+    @info "Number of epochs: $(Integer(length(train) / bpe_train))"
 
 
     # Plotting the training loss per batch
-    p = Plots.plot(losses.train; xaxis=(:log10, "batches"),
+    p = Plots.plot(train; xaxis=(:log10, "batches"),
         yaxis=(:log10, "loss"), label="training loss per batch", title=title)
 
     # Plotting the training loss per epoch
-    Plots.plot!(bpe_t:bpe_t:length(losses.train), 
-        mean.(Iterators.partition(losses.train, bpe_t)),
+    Plots.plot!(bpe_train:bpe_train:length(train), 
+        mean.(Iterators.partition(train, bpe_train)),
         label="training loss epoch mean", dpi=200, lw=3)
 
     # Plotting the validation loss per epoch
-    Plots.plot!(bpe_t:bpe_t:length(losses.train),
-        mean.(Iterators.partition(losses.valid, bpe_v)),
+    Plots.plot!(bpe_train:bpe_train:length(train),
+        mean.(Iterators.partition(valid, bpe_valid)),
         label="validation loss epoch mean", dpi=800, lw=3, color=:black)
 
 

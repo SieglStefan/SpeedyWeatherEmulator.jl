@@ -1,7 +1,5 @@
 using SpeedyWeatherEmulator
-using Plots
-using ProgressMeter
-using Measures
+using Plots, Measures
 
 
 ### This Code is very similar to the counterpart "hyperpara_opt_coarse_eval.jl":
@@ -21,28 +19,30 @@ sim_para_loading = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
 sim_data = load_data(sim_para_loading, type="sim_data")
 fd = FormattedData(sim_data)
 
+sim_data.data
+
 
 # Different parameters for the fine optimization
-L_list = [1]                                                        # number of hidden layers
-W_list_fine = [256, 384, 512, 640, 768, 896, 1024, 1536, 2048]      # number of neurons per hidden layer                           
+L_list = [1]                                                                # number of hidden layers
+W_list_fine = [384, 512, 640, 768, 896, 1024, 1280, 1536, 2048]        # number of neurons per hidden layer                                      # number of neurons per hidden layer (coarse)                        
 
 
 d = 2*calc_n_coeff(trunc=TRUNC)                                
 n_params(d, W, L) = (d*W + W) + (L-1)*(W*W + W) + (W*d + d)
-data = Dict{Tuple{Int,Int}, NamedTuple}()                     
+plot_data = Dict{Tuple{Int,Int}, NamedTuple}()  
+horizons = [1, 6, 12, 24]                  
 
 
-@showprogress for L in L_list, W in W_list_fine
+for L in L_list, W in W_list_fine
 
     id = "_hyperpara_L$(L)_W$(W)"
     sim_para = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key=id)
 
     em = load_data(sim_para, type="emulator")
-    losses = load_data(sim_para, type="losses")
 
     err_vec = zeros(N_DATA)
 
-    for steps in 1:N_DATA
+    for steps in horizons
         err_vec[steps] = compare_emulator(  em,
                                             x_test=fd.data_pairs.x_valid,
                                             y_test=fd.data_pairs.y_valid,
@@ -50,40 +50,50 @@ data = Dict{Tuple{Int,Int}, NamedTuple}()
 
     end
 
-    data[(L,W)] = ( err = err_vec,
-                    training_time = losses.training_time,
-                    params = n_params(d, W, L))
+    plot_data[(L,W)] = (err=err_vec, params=n_params(d, W, L))
 end
 
 
-params = [data[(L,W)].params for L in L_list for W in W_list_fine]
-times  = [data[(L,W)].training_time for L in L_list for W in W_list_fine]
-
-colors = [L for L in L_list for W in W_list_fine]
-
-scatter(params, times;
-        group=colors,
-        xlabel="Number of parameters",
-        ylabel="Training time [s]",
-        title="Training time vs. #params (colored by L)")
-
-        
-horizons      = [1, 6, 12, 24]
+# Small differences in the plotting scheme     
 marker_shapes = Dict(1=>:circle, 2=>:square, 3=>:diamond)
-
 plots = Plots.Plot[]
 
 for h in horizons
-    p = plot(xlabel="#parameters", ylabel="Relative error", title="h = $(h)h")
+    p = Plots.plot( xlabel="Number of parameters", 
+                    ylabel="Relative error / %",
+                    title="horizon = $(h)h", 
+                    titlefontsize=18)                     
     for L in L_list 
-        xs = [data[(L,W)].params for W in W_list_fine]
-        ys = [data[(L,W)].err[h] for W in W_list_fine]
-        scatter!(p, xs, ys; markershape=marker_shapes[L], label="L = $L", markersize=6)
+        xs = [plot_data[(L,W)].params for W in W_list_fine]
+        ys = [plot_data[(L,W)].err[h] for W in W_list_fine]
+        
+        Plots.scatter!(p, xs, ys;
+                 markershape=marker_shapes[L],
+                 label="",
+                 markersize=8)                             
+        
+        # Create offset for W index
+        yspan = maximum(ys) - minimum(ys)
+        dy    = 0.04 * (yspan == 0 ? 1 : yspan)            
+
+        for (xi, yi, W) in zip(xs, ys, W_list_fine)
+            annotate!(p, xi, yi + dy, Plots.text("$(W)", 11, :black, :center, :bottom))
+        end
     end
     push!(plots, p)
 end
 
-plot(plots...;  layout=(2,2), 
-                xscale=:log10, 
-                plot_title="Relative Forecast Error vs. Model Size for Different Prediction Horizons", 
-                size=(1000,800), margin=5mm, plot_margin=5mm)
+
+p = Plots.plot(plots...; layout=(2,2),
+                    plot_title="Results of Fine Hyperparameter Optimization",
+                    size=(1000,900), margin=8mm,
+                    xscale=:log10, 
+                    xticks = ([5e4, 1e5, 2e5], ["5×10⁴", "10⁵", "2×10⁵"]), 
+                    plot_titlefontsize=25,           
+                    guidefont=13,                
+                    tickfont=12,                       
+                    legendfontsize=12)                 
+
+
+display(p)
+Plots.savefig(p, joinpath(@__DIR__, "plots", "fine_opt.pdf"))

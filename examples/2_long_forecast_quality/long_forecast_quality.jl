@@ -1,7 +1,6 @@
 using SpeedyWeatherEmulator
 using Random
 using Plots, CairoMakie
-using FileIO, MosaicViews
 
 
 ### Prepare emulator evaluation
@@ -19,23 +18,9 @@ sim_para_loading_data = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
 sim_data = load_data(sim_para_loading_data, type="sim_data")
 fd = FormattedData(sim_data)
 
-# Define neural network and train the emulator
-#sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_fq")
-
-#L = 1
-#W = 1024
-
-#nn = NeuralNetwork( io_dim=2*calc_n_coeff(trunc=TRUNC),
-#                    hidden_dim = W,
-#                    n_hidden = L)
-
-#em, losses = train_emulator(nn, fd; sim_para=sim_para_emulator)
-#save_data(em)
-
-### DELETE LATER
+# Loading the best emulator from the hyperparameter optimiaztion
 sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W1024")
 em = load_data(sim_para_emulator, type="emulator")
-### DELETE LATER
 
 # Define container for rel. errors for different forecast lengths
 err_vec = zeros(N_DATA)             # rel. errors of trained emulator
@@ -60,19 +45,47 @@ end
 ### Plots of rel. errros
 
 # Plot just the rel. error
-Plots.scatter(err_vec)
+p1 = Plots.scatter( err_vec;                     
+                    title="Emulator Comparison to Identiy for Long Forecasts",
+                    xlabel="Forecast length / h",
+                    ylabel="Rel. forecast error / %",
+                    legend=false,
+                    xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
+                    xformatter = x -> "$(Int(round(x/1e5)))×10⁵",
+                    plot_titlefontsize=25,              # title size
+                    guidefont=13,                       # axis title size
+                    tickfont=12,                        # tick size
+                    legendfontsize=12,                  # legend size
+                    markersize=5)                       # marker size     
 
 # Plot comparing the trained emulator and the identiy emulator on log-axes
-Plots.scatter(err_vec, yscale=:log10)
-Plots.scatter!(err_vec0, yscale=:log10)
+p2 = Plots.scatter( [err_vec, err_vec0];
+                    label=["Emulator" "Identity"],
+                    title="Emulator Comparison to Identiy for Long Forecasts",
+                    xlabel="Forecast length / h",
+                    ylabel="Rel. forecast error / %",
+                    yscale=:log10, 
+                    yticks = ([10,100,1000], ["10", "10²", "10³"]),
+                    xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
+                    plot_titlefontsize=25,              # title size
+                    guidefont=13,                       # axis title size
+                    tickfont=12,                        # tick size
+                    legendfontsize=12,                  # legend size
+                    markersize=5,                       # marker size
+                    legend=:bottomright)
 
+# Display and save plots
+display(p1)
+display(p2)
+Plots.savefig(p1, joinpath(@__DIR__, "plots", "long_forecast_quality.pdf"))
+Plots.savefig(p2, joinpath(@__DIR__, "plots", "long_forecast_comp_id.pdf"))
 
 
 ### Heatmap plots for comparison
 
 # Define the time horizons for comparison and used initial condition
 horizons = [1, 6, 24, 48]
-ic = 1
+ic = 9
 
 
 # Loop for different time horizons
@@ -89,29 +102,17 @@ for h in horizons
     end
 
     # Create heatmap plots
-    fig_sw = plot_heatmap(vor_sw, trunc=5, title="speedyweather: $h")
-    fig_em = plot_heatmap(vor_em, trunc=5, title="emulator: $h")
+    fig_sw = plot_heatmap(vor_sw, trunc=5, title="")
+    fig_em = plot_heatmap(vor_em, trunc=5, title="")
 
-    # Create output path 
-    outpath_sw = joinpath(@__DIR__, "plots", "sw_$(ic)_$h.png")
-    outpath_em = joinpath(@__DIR__, "plots", "em_$(ic)_$h.png")
+    # Display the figures
+    display(fig_sw)
+    display(fig_em)
 
     # Save the plots
-    CairoMakie.save(outpath_sw, fig_sw)
-    CairoMakie.save(outpath_em, fig_em)
+    CairoMakie.save(joinpath(@__DIR__, "plots", "sw_$(ic)_$h.pdf"), fig_sw)
+    CairoMakie.save(joinpath(@__DIR__, "plots", "em_$(ic)_$h.pdf"), fig_em)
 end
-
-# Load the plots and combine them 
-img_sw = [load(joinpath(@__DIR__, "plots", "sw_$(ic)_$h.png")) for h in horizons]
-img_em = [load(joinpath(@__DIR__, "plots", "em_$(ic)_$h.png")) for h in horizons]
-imgs = vcat(img_sw, img_em) 
-
-# Combine the heatmap plots and save the grid-plot for "first look" 
-#   (the plots are later combined in another program (inkscape) for better looking plots)
-grid = mosaic(imgs; nrow=length(horizons), ncol=2)
-save(joinpath(@__DIR__, "plots", "_grid_ic$(ic).png"), grid)
-
-
 
 
 

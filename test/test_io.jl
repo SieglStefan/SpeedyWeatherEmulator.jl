@@ -2,7 +2,7 @@ using Test
 using SpeedyWeatherEmulator
     
 
-@testset "data_path" begin
+@testset "test_data_path" begin
     # Testing path creation for different simulation parameters (only checking path endings)
     sim1 = SimPara(trunc=5, n_data=48, n_ic=1000)
     path1 = data_path(sim1, type="raw_data")
@@ -33,7 +33,7 @@ using SpeedyWeatherEmulator
 end
 
 
-@testset "delete_data" begin
+@testset "test_delete_data" begin
     sim = SimPara(trunc=5, n_data=1, n_ic=1)
 
     mktempdir() do tmp
@@ -66,7 +66,7 @@ end
 end
 
 
-@testset "save_data, load_data" begin
+@testset "test_save_data_load_data" begin
     sim = SimPara(trunc=5, n_data=1, n_ic=1)
     sim_data = SimData(sim, rand(Float32, 2, 3, 1))
 

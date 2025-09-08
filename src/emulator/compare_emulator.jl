@@ -26,6 +26,7 @@ Compare emulator predictions against SpeedyWeather.jl reference data.
 - `n_it::Int64`: Number of timesteps compared.
 - `output::Bool=false`: If true, print errors to STDOUT.
 - `all_coeff::Bool=false`: If true, print relative error for each coefficient.
+- `id_em::Bool=false`: The identiy emulator is used (em(vor(t)) = vor(t))
 
 # Returns
 - `mean_mean_rel::Float32`: The mean (all spectral coeff.) mean (all possible datapairs) relative error for `n_it` timesteps.
@@ -69,7 +70,6 @@ function compare_emulator(em::Emulator;
 
     vor_em = vor_em[:, setdiff(1:end, cols_delete_x)]
     vor_sw = vor_sw[:, setdiff(1:end, cols_delete_y)]
-
 
 
     if id_em == false

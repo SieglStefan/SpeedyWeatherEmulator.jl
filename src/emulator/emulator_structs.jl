@@ -8,49 +8,49 @@ using Flux
 Container for the layer dimensions of a neural network.
 
 # Fields
-- `io_dim::Int64`: Dimension of the input and output layer (e.g. number of spectral coefficients).
-- `hidden_dim::Int64`: Dimension of each hidden layer.
-- `n_hidden::Int64`: Number of hidden layers.
+- `io_dim::Int`: Dimension of the input and output layer (e.g. number of spectral coefficients).
+- `hidden_dim::Int`: Dimension of each hidden layer.
+- `n_hidden::Int`: Number of hidden layers.
 """
 struct NeuralNetwork
-    io_dim::Int64
-    hidden_dim::Int64
-    n_hidden::Int64
+    io_dim::Int
+    hidden_dim::Int
+    n_hidden::Int
 end
 
 
 """
-    NeuralNetwork(; io_dim::Int64=54, hidden_dim::Int64=128, n_hidden::Int64=1)
+    NeuralNetwork(; io_dim::Int=54, hidden_dim::Int=1024, n_hidden::Int=1)
 
 Convenience constructor for `NeuralNetwork`.
 
 # Arguments
-- `io_dim::Int64`: Dimension of the input and output layer (e.g. number of spectral coefficients).
-- `hidden_dim::Int64`: Dimension of each hidden layer.
-- `n_hidden::Int64`: Number of hidden layers.
+- `io_dim::Int`: Dimension of the input and output layer (e.g. number of spectral coefficients).
+- `hidden_dim::Int`: Dimension of each hidden layer.
+- `n_hidden::Int`: Number of hidden layers.
 
 # Returns
 - `::NeuralNetwork`: Parameter container.
 """
-function NeuralNetwork(;io_dim::Int64=54, hidden_dim::Int64=128, n_hidden::Int64=1)
+function NeuralNetwork(;io_dim::Int=54, hidden_dim::Int=1024, n_hidden::Int=1)
     return NeuralNetwork(io_dim, hidden_dim, n_hidden)
 end
 
 
 """
-    Emulator
+    Emulator{A<:AbstractVector{Float32}}
 
 Container for a trained (or in-progress) neural network emulator.
 
 # Fields
 - `sim_para::SimPara`: Simulation parameters of the dataset used for training, validation and testing.
 - `chain::Flux.Chain`: Neural network architecture and weights.
-- `zscore_para::ZscorePara`: Normalization parameters (mean/std of training set).
+- `zscore_para::ZscorePara{A} `: Normalization parameters (mean/std of training set).
 """
-struct Emulator
+struct Emulator{F<:AbstractVector{Float32}}
     sim_para::SimPara
     chain::Flux.Chain
-    zscore_para::ZscorePara  
+    zscore_para::ZscorePara{F} 
 end
 
 
@@ -103,26 +103,22 @@ end
 """
     Losses
 
-Container for logging training, validation, and test losses.
+Container for logging training and validation losses and training time.
 
 # Fields
 - `sim_para::SimPara`: Simulation parameters of the dataset used.
 - `train::Vector{Float32}`: Training loss per batch.
 - `valid::Vector{Float32}`: Validation loss per batch.
-- `test::Vector{Float32}`: Test loss per batch.
 - `bpe_train::Int64`: Batches per epoch (training set).
 - `bpe_valid::Int64`: Batches per epoch (validation set).
-- `bpe_test::Int64`: Batches per epoch (test set).
 - `training_time`: Time needed for training the model in seconds.
 """
 struct Losses
     sim_para::SimPara
     train::Vector{Float32}  
     valid::Vector{Float32}    
-    test::Vector{Float32}
     bpe_train::Int64     
     bpe_valid::Int64
-    bpe_test::Int64
     training_time::Float64
 end
 
@@ -138,7 +134,7 @@ Constructor for an empty `Losses` container.
 - `bpe_valid::Int64`: Batches per epoch (validation set).
 
 # Returns
-- `::Losses`: Initialized container with empty loss vectors and `bpe_test = 0`.
+- `::Losses`: Initialized container with empty loss vectors and `training_time = 0.0`.
 """
-Losses(sim_para::SimPara, bpe_train::Int64, bpe_valid::Int64) = Losses(sim_para, Float32[], Float32[], Float32[], bpe_train, bpe_valid, 0, 0.0)
+Losses(sim_para::SimPara, bpe_train::Int64, bpe_valid::Int64) = Losses(sim_para, Float32[], Float32[], bpe_train, bpe_valid, 0.0)
 

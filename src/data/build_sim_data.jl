@@ -2,13 +2,13 @@ using Printf
 
 
 """
-    SimData
+    SimData{F, A<:AbstractArray{Float32, 3}}
 
 Container for SpeedyWeather.jl vorticity data together with the simulation parameters.
 
 # Fields
-- `sim_para::SimPara`: Container for parameters that define the simulation and data storage.
-- `data::Array{Float32,3}`: Vorticity tensor with shape (2 * `n_coeff`, `n_data`, `n_ic`)
+- `sim_para::SimPara{F}`: Container for parameters that define the simulation and data storage.
+- `data::A`: Vorticity tensor with shape (2 * `n_coeff`, `n_data`, `n_ic`)
         where `n_coeff = calc_n_coeff(sim_para.trunc)`. 
         The first `n_coeff` rows store the **real** parts, 
         the next `n_coeff` rows the **imaginary** parts of the complex spectral coefficients.
@@ -17,9 +17,9 @@ Container for SpeedyWeather.jl vorticity data together with the simulation param
 - The layout is column-major and optimized for contiguous slicing over time and ICs.
 - Dimensions are inferred from `sim_para` and remain consistent across the pipeline.
 """
-struct SimData
-    sim_para::SimPara
-    data::Array{Float32, 3}
+struct SimData{F, A<:AbstractArray{Float32, 3}}
+    sim_para::SimPara{F}
+    data::A
 end
 
 
@@ -39,13 +39,13 @@ This constructor:
    - stores at time index `step + 1 - n_spinup`.
 
 # Arguments
-- `sim_para::SimPara`: Container for parameters that define the simulation and data storage; 
+- `sim_para::SimPara{F}`: Container for parameters that define the simulation and data storage; 
     **must match** the generated raw data on disk.
 - `path::String = ""`: Optional absolute path of storaged `raw_data`.  
     If left empty, the function defaults to the package's internal `data/<type>` folder.
 
 # Returns
-- `::SimData`: Container holding simulation data and corresponding sim. parameters.
+- `::SimData{F, Array{Float32,3}}`: Container holding simulation data and corresponding sim. parameters.
 
 # Preconditions
 - Expects raw data in `data_path(sim_para; type="raw_data")` with per-run subfolders
@@ -68,10 +68,7 @@ size(sim_data.data)  # (2*n_coeff, n_data, n_ic)
 function SimData(sim_para::SimPara, path::String="")
 
     # Unpack simulation parameters
-    trunc = sim_para.trunc
-    n_data = sim_para.n_data
-    n_ic = sim_para.n_ic
-    n_spinup = sim_para.n_spinup
+    (; trunc, n_data, n_ic, n_spinup) = sim_para 
     
     # Creating data array
     n_coeff = calc_n_coeff(trunc=trunc)
@@ -90,11 +87,13 @@ function SimData(sim_para::SimPara, path::String="")
         out = file["output_vector"]
         close(file)
 
+        # Scaling factor
+        sc = Float32(out[1].scale[])
 
         # Extracting n_data datapoints per initial condition
-        for step in n_spinup+1:1:n_spinup+n_data
+        for step in n_spinup+1:n_spinup+n_data
             prog = out[step]
-            vor = vec(prog.vor[:,:,1])
+            vor = vec(prog.vor[:,:,1] ./sc)
 
             data[1:n_coeff, step-n_spinup, ic] .= Float32.(real.(vor))
             data[n_coeff+1:2*n_coeff, step-n_spinup, ic] .= Float32.(imag.(vor))

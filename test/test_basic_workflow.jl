@@ -1,7 +1,7 @@
 using Test
 using SpeedyWeatherEmulator
 
-@testset "Basic workflow" begin
+@testset "test_basic_workflow" begin
     sim = SimPara(trunc=5, n_data=8, n_ic=4, n_spinup=1, id_key="_TEST")
 
     # Creating a temporary folder

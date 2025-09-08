@@ -3,7 +3,7 @@ module SpeedyWeatherEmulator
 # core
 include("core/basic_structs.jl")
 include("core/utils.jl")
-export SimPara, is_coeff_zero, calc_n_coeff
+export SimPara, calc_n_coeff
 
 # io 1
 include("io/utils_io.jl")
@@ -31,9 +31,6 @@ export save_data, load_data
 include("evaluation/plot_losses.jl")
 include("evaluation/plot_heatmap.jl")
 export plot_losses, vec_to_ltm, plot_heatmap
-
-
-
 
 
 

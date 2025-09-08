@@ -22,9 +22,9 @@ fd = FormattedData(sim_data)
 
 
 # Different parameters for the fine optimization
-L_list = [1]                                                        # number of hidden layers
-W_list_fine = [256, 384, 512, 640, 768, 896, 1024, 1536, 2048]      # number of neurons per hidden layer
-W_list_coarse = [64, 128, 256, 512]                                 # number of neurons per hidden layer (coarse)
+L_list = [1]                                                                # number of hidden layers
+W_list_fine = [256, 384, 512, 640, 768, 896, 1024, 1280, 1536, 2048]        # number of neurons per hidden layer
+W_list_coarse = [64, 128, 256, 512]                                         # number of neurons per hidden layer (coarse)
 
 
 nn_warmup = NeuralNetwork(io_dim=2*calc_n_coeff(trunc=TRUNC),

@@ -1,7 +1,10 @@
 using SpeedyWeatherEmulator
 using Random
 using Plots, CairoMakie
-using FileIO, MosaicViews
+
+
+### This Code is similar to "long_forecast_quaility.jl", but still has some major differences
+
 
 ### Prepare emulator evaluation
 
@@ -21,15 +24,9 @@ sim_para_loading = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
 sim_data = load_data(sim_para_loading, type="sim_data")
 fd = FormattedData(sim_data)
 
-# Loading the emulator
-#   (we assume a trained emulator already exists, created by "2_long_forecast_quality")
-# sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_fq")
-# em = load_data(sim_para_emulator, type="emulator")
-
-### DELETE LATER
+# Loading the best emulator from the hyperparameter optimiaztion
 sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W1024")
 em = load_data(sim_para_emulator, type="emulator")
-### DELETE LATER
 
 
 ## Prepare test data
@@ -42,7 +39,7 @@ K = 7.848e-6
 ζ(λ, θ, σ) = 2ω*sind(θ) - K*sind(θ)*cosd(θ)^m*(m^2 + 3m + 2)*cosd(m*λ)
 
 # Define test data
-sim_para_RH = SimPara(trunc=5, n_data=48, n_ic=1, initial_cond=ζ, id_key="_RH_wave")
+sim_para_RH = SimPara(trunc=5, n_data=48, n_ic=1, initial_cond=ζ, id_key="_RH_wave", n_spinup=0)
 generate_raw_data(sim_para_RH)
 sim_data_RH = SimData(sim_para_RH)
 fd_RH = FormattedData(sim_data_RH, splits=(train=0, valid=0, test=1))
@@ -65,21 +62,33 @@ for steps in 1:N_DATA
                                         x_test=fd_RH.data_pairs.x_test,
                                         y_test=fd_RH.data_pairs.y_test,
                                         n_it=steps,
-                                        id_em=true)
+                                        id_em=true)      # identy emulator (em(vor) = vor)
 end
 
 
 
 ### Plots of rel. errros
 
-# Plot just the rel. error
-Plots.scatter(err_vec)
-Plots.scatter(err_vec0)
 
 # Plot comparing the trained emulator and the identiy emulator on log-axes
-Plots.scatter(err_vec, yscale=:log10)
-Plots.scatter!(err_vec0, yscale=:log10)
+p1 = Plots.scatter( [err_vec, err_vec0];
+                    label=["Emulator" "Identity"],
+                    title="Emulator Comparison to Identiy for Rossby-Haurwitz Wave",
+                    xlabel="Forecast length / h",
+                    ylabel="Rel. forecast error / %",                   
+                    yscale=:log10, 
+                    yticks = ([10,100,1000], ["10", "10²", "10³"]),
+                    xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
+                    plot_titlefontsize=25,   # Titelgröße
+                    guidefont=13,            # Achsenbeschriftungen
+                    tickfont=12,             # Zahlen an den Achsen)
+                    markersize=5,
+                    legendfontsize=12,
+                    legend=:bottomright)
 
+# Display and save plots
+display(p1)
+Plots.savefig(p1, joinpath(@__DIR__, "plots", "long_forecast_RH.pdf"))
 
 
 ### Heatmap plots for comparison
@@ -108,22 +117,7 @@ for h in horizons
     display(fig_sw)
     display(fig_em)
 
-
-    # Create output path 
-    outpath_sw = joinpath(@__DIR__, "plots", "sw_$h.png")
-    outpath_em = joinpath(@__DIR__, "plots", "em_$h.png")
-
     # Save the plots
-    CairoMakie.save(outpath_sw, fig_sw)
-    CairoMakie.save(outpath_em, fig_em)
+    CairoMakie.save(joinpath(@__DIR__, "plots", "sw_$h.pdf"), fig_sw)
+    CairoMakie.save(joinpath(@__DIR__, "plots", "em_$h.pdf"), fig_em)
 end
-
-# Load the plots and combine them 
-img_sw = [load(joinpath(@__DIR__, "plots", "sw_$h.png")) for h in horizons]
-img_em = [load(joinpath(@__DIR__, "plots", "em_$h.png")) for h in horizons]
-imgs = vcat(img_sw, img_em) 
-
-# Combine the heatmap plots and save the grid-plot for "first look" 
-#   (the plots are later combined in another program (inkscape) for better looking plots)
-grid = mosaic(imgs; nrow=length(horizons), ncol=2)
-save(joinpath(@__DIR__, "plots", "_grid.png"), grid)

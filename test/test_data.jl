@@ -2,7 +2,7 @@ using Test
 using SpeedyWeatherEmulator
 using Statistics
 
-@testset "generate_raw_data" begin
+@testset "test_generate_raw_data" begin
     sim = SimPara(trunc=2, n_data=2, n_ic=1, n_spinup=0, id_key="_TEST")
     
     # Testing raw data generatiom
@@ -34,7 +34,7 @@ using Statistics
 end
 
 
-@testset "SimData" begin
+@testset "test_simdata" begin
     sim = SimPara(trunc=5, n_data=7, n_ic=3)
     n_coeff = calc_n_coeff(trunc=sim.trunc)  
     sim_data = SimData(sim, zeros(Float32, 2*n_coeff, sim.n_data, sim.n_ic))
@@ -44,7 +44,7 @@ end
 end
 
 
-@testset "FormattedData" begin
+@testset "test_formatteddata" begin
     sim = SimPara(trunc=5, n_data=6, n_ic=2)
     n_coeff = calc_n_coeff(trunc=sim.trunc)
     sim_data = SimData(sim, zeros(Float32, 2*n_coeff, sim.n_data, sim.n_ic))

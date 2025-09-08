@@ -1,50 +1,51 @@
 
 
 """
-    DataPairs(x_train, y_train, x_valid, y_valid, x_test, y_test)
+    DataPairs{A<:AbstractArray{Float32, 2}}
 
-Container for paired data samples (x,y) = (vor(t), vor(t+Δt)), already split into
-training, validation and test sets.
+Container for paired data samples (x,y) = (vor(t), vor(t+Δt)), already split into training, validation and test sets.
 
 # Fields
-- `x_train::Matrix{Float32}`: Training inputs vor(t).
-- `y_train::Matrix{Float32}`: Training targets vor(t+Δt).
-- `x_valid::Matrix{Float32}`: Validation inputs vor(t).
-- `y_valid::Matrix{Float32}`: Validation targets vor(t+Δt).
-- `x_test::Matrix{Float32}`: Test inputs vor(t).
-- `y_test::Matrix{Float32}`: Test targets vor(t+Δt).
+- `x_train::A`: Training inputs vor(t).
+- `y_train::A`: Training targets vor(t+Δt).
+- `x_valid::A`: Validation inputs vor(t).
+- `y_valid::A`: Validation targets vor(t+Δt).
+- `x_test::A`: Test inputs vor(t).
+- `y_test::A`: Test targets vor(t+Δt).
 
 # Notes
 - All matrices have the same row dimension = 2 * n_coeff.
 - Columns index over independent time-pairs and ICs.
 """
-struct DataPairs
-    x_train::Matrix{Float32}
-    y_train::Matrix{Float32}
-    x_valid::Matrix{Float32}
-    y_valid::Matrix{Float32}
-    x_test::Matrix{Float32}
-    y_test::Matrix{Float32}
+struct DataPairs{A<:AbstractArray{Float32, 2}}
+    x_train::A
+    y_train::A
+    x_valid::A
+    y_valid::A
+    x_test::A
+    y_test::A
 end
 
 
 """
-    FormattedData
+    FormattedData{F, A<:AbstractArray{Float32, 2}}
 
 Container for formatted data, i.e. paired vorticity samples (x,y) = (vor(t), vor(t+Δt)).
 
 # Fields
-- `sim_para::SimPara`: Container for parameters that define the simulation and data storage.
-- `data_pairs::DataPairs`: The split and paired data.
+- `sim_para::SimPara{F}`: Container for parameters that define the simulation and data storage.
+- `data_pairs::DataPairs{A}`: The split and paired data.
 """
-struct FormattedData
-    sim_para::SimPara
-    data_pairs::DataPairs
+struct FormattedData{F, A<:AbstractArray{Float32, 2}}
+    sim_para::SimPara{F}
+    data_pairs::DataPairs{A}
 end
 
 
 """
-    FormattedData(sim_data::SimData; splits=(train=0.7, valid=0.15, test=0.15))
+    FormattedData(  sim_data::SimData; 
+                    splits::NamedTuple{(:train, :valid, :test),<:Tuple{Vararg{Real,3}}} = 
+                        (train=0.7, valid=0.15, test=0.15))
 
 Construct `FormattedData` directly from `SimData` by pairing consecutive time steps
     and splitting them into train/validation/test sets.
@@ -58,15 +59,15 @@ Construct `FormattedData` directly from `SimData` by pairing consecutive time st
 
 # Arguments
 - `sim_data::SimData`: Container holding simulation data and corresponding sim. parameters.
-- `splits::NamedTuple`: Fractions for train-, valid- and test-set.  
+- `splits::NamedTuple{(:train, :valid, :test),<:Tuple{Vararg{Real,3}}}`: Fractions for train-, valid- and test-set.  
     Default = (0.7, 0.15, 0.15).
 
 # Returns
-- `::FormattedData`: Container holding formatted (paired) simulation data and corresponding sim. parametrs.
+- `::FormattedData`: Container holding formatted (paired) simulation data and corresponding sim. parameters.
 
 # Notes
-- The number of total pairs is (`n_data` - 1) * `n_ic.
-- Splits are normalized so that train + valid + test = 1.
+- The number of total pairs is `(n_data - 1) * n_ic`.
+- Splits are normalized so that `train + valid + test = 1`.
 
 # Examples
 ```julia
@@ -74,12 +75,11 @@ fd = FormattedData(sim_data; splits=(train=0.7, valid=0.2, test=0.1))
 size(fd.data_pairs.x_train)  # (2*n_coeff, n_train)
 ```
 """
-function FormattedData(sim_data::SimData; 
-    splits::NamedTuple{(:train, :valid, :test),<:Tuple{Vararg{Real,3}}} = 
-        (train=0.7, valid=0.15, test=0.15))
+function FormattedData( sim_data::SimData; 
+                        splits::NamedTuple{(:train, :valid, :test),<:Tuple{Vararg{Real,3}}} = 
+                            (train=0.7, valid=0.15, test=0.15))
 
-    sim_para = sim_data.sim_para
-    data = sim_data.data
+    (; sim_para, data) = sim_data
 
     total = splits.train + splits.valid + splits.test
     train_frac = splits.train / total
