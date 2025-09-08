@@ -4,8 +4,10 @@ using Statistics, ProgressMeter
 
 
 """
-    train_emulator(nn::NeuralNetwork, fd::FormattedData; sim_para::SimPara=fd.sim_para, 
-                   batchsize::Int=32, n_epochs::Int=300, η0::Real=0.001)
+    train_emulator( nn::NeuralNetwork, 
+                    fd::FormattedData; 
+                    sim_para::SimPara=fd.sim_para, 
+                    batchsize::Int = 32, n_epochs::Int=300, η0::Real=0.001)
 
 Train an emulator (neural network) with the given architecture and data.
 
@@ -41,8 +43,10 @@ fd = FormattedData(sim_data; splits=(train=0.7, valid=0.2, test=0.1))
 em, losses = train_emulator(nn, fd; batchsize=64, n_epochs=100, η0=0.0005)
 ```
 """
-function train_emulator(nn::NeuralNetwork, fd::FormattedData; sim_para::SimPara=fd.sim_para, 
-        batchsize::Int = 32, n_epochs::Int=300, η0::Real=0.001)
+function train_emulator(nn::NeuralNetwork, 
+                        fd::FormattedData; 
+                        sim_para::SimPara=fd.sim_para, 
+                        batchsize::Int = 32, n_epochs::Int=300, η0::Real=0.001)
 
     # Calculating parameters for Z-score trafo
     μ = Float32.(vec(mean(fd.data_pairs.x_train; dims=2)))            
@@ -50,7 +54,7 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData; sim_para::SimPara=
     zscore_para = ZscorePara(μ, σ)
 
     # Defining the emulator
-    em = Emulator(nn, zscore_para, sim_para)
+    em = Emulator(sim_para, nn, zscore_para)
 
     # Transforming the training and validation data
     x_train_norm = zscore(fd.data_pairs.x_train, zscore_para)
@@ -103,7 +107,7 @@ function train_emulator(nn::NeuralNetwork, fd::FormattedData; sim_para::SimPara=
 
     # Reinitialize Losses and emulator
     (; sim_para, train, valid, bpe_train, bpe_valid) = losses0
-    losses = Losses(sim_para, train, valid, bpe_train, bpe_valid, train_time)
+    losses = Losses(sim_para, train, valid, bpe_train, bpe_valid, Float32(train_time))
 
 
     # Compares the emulator with the training set for a single timestep.

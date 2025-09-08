@@ -11,7 +11,7 @@ const N_DATA = 48
 const N_IC = 1000
 
 sim_para_loading = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
-sim_data = load_data(sim_para_loading, type="sim_data")
+sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Define the parameters for the coarse hyperparameter optimization

@@ -11,7 +11,7 @@ const TRUNC = 5
 const N_DATA = 48
 const N_IC = 1000
 
-sim_para = SimPara(trunc=5, n_data=48, n_ic=1000)
+sim_para = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
 
 
 # Generate raw data

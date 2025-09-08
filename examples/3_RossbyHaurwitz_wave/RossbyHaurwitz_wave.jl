@@ -21,12 +21,12 @@ const N_DATA = 48
 const N_IC = 1000
 
 sim_para_loading = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
-sim_data = load_data(sim_para_loading, type="sim_data")
+sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Loading the best emulator from the hyperparameter optimiaztion
 sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W1024")
-em = load_data(sim_para_emulator, type="emulator")
+em = load_data(Emulator, sim_para_emulator)
 
 
 ## Prepare test data

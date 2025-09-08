@@ -16,7 +16,7 @@ const N_DATA = 48
 const N_IC = 1000
 
 sim_para_loading = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC)
-sim_data = load_data(sim_para_loading, type="sim_data")
+sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 sim_data.data
@@ -38,7 +38,7 @@ for L in L_list, W in W_list_fine
     id = "_hyperpara_L$(L)_W$(W)"
     sim_para = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key=id)
 
-    em = load_data(sim_para, type="emulator")
+    em = load_data(Emulator, sim_para)
 
     err_vec = zeros(N_DATA)
 

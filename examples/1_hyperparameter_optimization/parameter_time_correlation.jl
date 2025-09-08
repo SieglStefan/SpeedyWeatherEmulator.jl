@@ -39,7 +39,7 @@ for (L,W) in pairs
     sim_para = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key=id)
 
     # Load the specific emulator losses
-    losses = load_data(sim_para, type="losses")
+    losses = load_data(Losses, sim_para)
 
     # Initialize the dict.
     plot_data[(L,W)] = (training_time=losses.training_time, params = n_params(d, W, L))

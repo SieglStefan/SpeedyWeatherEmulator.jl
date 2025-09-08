@@ -73,10 +73,10 @@ end
     mktempdir() do tmp
         # Save and load data
         save_data(sim_data; overwrite=true, path=tmp)
-        loaded = load_data(sim; type="sim_data", path=tmp)
+        loaded = load_data(SimData, sim, path=tmp)
 
         # Comparing the saved/loaded data with the actual data
-        @test typeof(loaded) == SimData
+        @test loaded isa SimData
         @test loaded.sim_para == sim_data.sim_para
         @test loaded.data == sim_data.data
     end

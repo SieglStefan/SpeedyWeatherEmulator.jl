@@ -3,12 +3,13 @@ using Statistics
 
 
 """
-    compare_emulator(em::Emulator; 
-                     x_test::Matrix{Float32},
-                     y_test::Matrix{Float32},
-                     n_it::Int64=1,
-                     output::Bool=false,
-                     all_coeff::Bool=false)
+    compare_emulator(   em::Emulator; 
+                        x_test::AbstractArray{Float32, 2},
+                        y_test::AbstractArray{Float32, 2},
+                        n_it::Int=1,
+                        output::Bool=false,
+                        all_coeff::Bool=false,
+                        id_em::Bool=false)
 
 Compare emulator predictions against SpeedyWeather.jl reference data.
 
@@ -21,12 +22,12 @@ Compare emulator predictions against SpeedyWeather.jl reference data.
 
 # Arguments
 - `em::Emulator`: Trained emulator to evaluate.
-- `x_test::Matrix{Float32}`: Test inputs (vorticity coefficients at t) of form (2 * n_coeff, N).
-- `y_test::Matrix{Float32}`: Reference outputs from SpeedyWeather.jl (at t+n_it*Δt) of form (2 * n_coeff, N).
+- `x_test::AbstractArray{Float32, 2}`: Test inputs (vorticity coefficients at t) of form (2 * n_coeff, N).
+- `y_test::AbstractArray{Float32, 2}`: Reference outputs from SpeedyWeather.jl (at t+n_it*Δt) of form (2 * n_coeff, N).
 - `n_it::Int64`: Number of timesteps compared.
 - `output::Bool=false`: If true, print errors to STDOUT.
 - `all_coeff::Bool=false`: If true, print relative error for each coefficient.
-- `id_em::Bool=false`: The identiy emulator is used (em(vor(t)) = vor(t))
+- `id_em::Bool=false`: The identity emulator is used (em(vor(t)) = vor(t))
 
 # Returns
 - `mean_mean_rel::Float32`: The mean (all spectral coeff.) mean (all possible datapairs) relative error for `n_it` timesteps.
@@ -47,9 +48,9 @@ compare_emulator(emu;
 ```
 """
 function compare_emulator(em::Emulator; 
-                            x_test::Matrix{Float32},
-                            y_test::Matrix{Float32},
-                            n_it::Int64=1,
+                            x_test::AbstractArray{Float32, 2},
+                            y_test::AbstractArray{Float32, 2},
+                            n_it::Int=1,
                             output::Bool=false,
                             all_coeff::Bool=false,
                             id_em::Bool=false)
@@ -111,7 +112,7 @@ function compare_emulator(em::Emulator;
         end
     end
 
-    return mean_mean_rel
+    return Float32(mean_mean_rel)
 end
 
 

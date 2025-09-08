@@ -25,7 +25,7 @@ end
     nn = NeuralNetwork(io_dim=4, hidden_dim=8, n_hidden=2)
     stats = ZscorePara(zeros(Float32, 4), ones(Float32, 4))
 
-    em = Emulator(nn, stats, sim)
+    em = Emulator(sim, nn, stats)
 
     # Testing conversion of input
     x = rand(Float32, 4)
@@ -66,7 +66,7 @@ end
     # Test if training creates a emulator object and nonempty losses
     emu, losses = train_emulator(nn, fd; batchsize=1, n_epochs=2, η0=0.01)      # small test parameters
 
-    @test typeof(emu) == Emulator
+    @test emu isa Emulator
     @test isempty(losses.train) == false
     @test isempty(losses.valid) == false
 end

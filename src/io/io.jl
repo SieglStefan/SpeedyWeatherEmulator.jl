@@ -33,17 +33,15 @@ save_data(sim_data; type="sim_data", overwrite=true)
 ```
 """
 function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false, path::String="")
-    
-    data_type = typeof(data)
 
-    if data_type == SimData
+    if data isa SimData
         type = "sim_data"
-    elseif data_type == Emulator
+    elseif data isa Emulator
         type = "emulator"
-    elseif data_type == Losses
+    elseif data isa Losses
         type = "losses"
     else
-        @warn "Data type '$data_type' is not supported!"
+        @error "Data type '$(typeof(data))' is not supported!"
     end
 
     sim_para = data.sim_para
@@ -65,18 +63,18 @@ end
 
 
 """
-    load_data(sim_para::SimPara; type::String)
+    load_data(::Type{T}, sim_para::SimPara; path::String="") where {T<:Union{SimData, Emulator, Losses}}
 
 Load previously saved data of a given type using the defining simulation parameters.
 
 # Arguments
+- `::Type{T}`: Dataset type, e.g. `SimData`, `Emulator` or `Losses`.
 - `sim_para::SimPara`: Simulation parameters; determines the folder/file name.
-- `type::String`: Dataset type, e.g. `"sim_data"`, `"emulator"`, `"losses"`.
 - `path::String = ""`: Optional absolute path for data loading.
     If left empty, the function defaults to the package's internal `data/<type>` folder.  
 
 # Returns
-- `::Union{SimData, Emulator, Losses}`: The saved object stored in the JLD2 file under the key `"data"`.  
+- `data::T`: The saved object stored in the JLD2 file under the key `"data"`.  
   (For example a `SimData`, `Emulator`, or `Losses` object.)
 
 # Notes
@@ -85,16 +83,25 @@ Load previously saved data of a given type using the defining simulation paramet
 # Examples
 ```julia
 sim_para = SimPara(trunc=5, n_data=50, n_ic=200)
-sim_data_loaded = load_data(sim_para; type="sim_data")
+sim_data_loaded = load_data(SimData, sim_para)
 ```
 """
-function load_data(sim_para::SimPara; type::String, path::String="")     
-    path = data_path(sim_para, type=type, path=path)
-    
-    file_path = normpath(joinpath(path))             # Create the storage DIR
+function load_data(::Type{T}, sim_para::SimPara; path::String="") where {T<:Union{SimData, Emulator, Losses}}
 
-    data = JLD2.load(file_path, "data")                  # Load the simulation data
-    @info "Data '$file_path' was loaded!"                    # Information, if and from where the data is loaded
+    if T <: SimData
+        type = "sim_data"
+    elseif T <: Emulator
+        type = "emulator"
+    elseif T <: Losses
+        type = "losses"
+    else
+        @error "Data type '$T' is not supported!"
+    end
+
+    path = data_path(sim_para, type=type, path=path)
+
+    data = JLD2.load(path, "data")::T                  # Load the simulation data
+    @info "Data '$path' was loaded!"                    # Information, if and from where the data is loaded
 
     return data
 end
