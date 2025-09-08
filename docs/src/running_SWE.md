@@ -291,7 +291,7 @@ plot_losses(losses; title="Training history (T5)")
 The number of epochs is inferred automatically from the batch size and dataset split.
 The returned plot object can be further customized or saved using the standard Plots.jl interface.
 
-### Vortivity Heatmaps
+### Vorticity Heatmaps
 To inspect actual states of the barotropic model, the function `plot_heatmap` reconstructs a vorticity field from a spectral coefficient vector and shows it as a heatmap.
 This requires specifying the spectral truncation to interpret the coefficient layout correctly:
 

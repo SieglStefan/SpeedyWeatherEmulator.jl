@@ -20,19 +20,19 @@ end
 
 
 """
-    NeuralNetwork(; io_dim::Int=54, hidden_dim::Int=1024, n_hidden::Int=1)
+    NeuralNetwork(; io_dim::Int=54, hidden_dim::Int=640, n_hidden::Int=1)
 
 Convenience constructor for `NeuralNetwork`.
 
 # Arguments
-- `io_dim::Int`: Dimension of the input and output layer (e.g. number of spectral coefficients).
-- `hidden_dim::Int`: Dimension of each hidden layer.
-- `n_hidden::Int`: Number of hidden layers.
+- `io_dim::Int = 54`: Dimension of the input and output layer (e.g. number of spectral coefficients). Standard is the T5 model.
+- `hidden_dim::Int = 640`: Dimension of each hidden layer. Optimal value, obtained by hyperparameter optimization.
+- `n_hidden::Int = 1`: Number of hidden layers. Optimal value, obtained by hyperparameter optimization.
 
 # Returns
 - `::NeuralNetwork`: Parameter container.
 """
-function NeuralNetwork(;io_dim::Int=54, hidden_dim::Int=1024, n_hidden::Int=1)
+function NeuralNetwork(;io_dim::Int=54, hidden_dim::Int=640, n_hidden::Int=1)
     return NeuralNetwork(io_dim, hidden_dim, n_hidden)
 end
 
@@ -70,11 +70,12 @@ according to the given `NeuralNetwork` specs.
 """
 function Emulator(sim_para::SimPara, nn::NeuralNetwork, zscore_para::ZscorePara)
     
-    chain = Chain(                                      # creates the neural network structure
+    # Create the neural network structure
+    chain = Chain(       
         Dense(nn.io_dim => nn.hidden_dim, relu),
         [Dense(nn.hidden_dim => nn.hidden_dim, relu) for _ in 1:(nn.n_hidden-1)]...,
         Dense(nn.hidden_dim => nn.io_dim)
-    ) |> gpu                                            # "sends" the model to the gpu (if available)
+    ) |> gpu                                                                # "sends" the model to the gpu (if available)
     return Emulator(sim_para, chain, zscore_para)
 end
 
@@ -88,13 +89,18 @@ Convenience call overload. Apply the trained emulator to spectral coefficients a
 - `x::AbstractArray{Float32}`: Spectral coefficients of vorticity at time t. First dimension must be `2 * n_coeff`.
 
 # Returns
-- `::Array{Float32}`: Emulator prediction for a single state at t + Δt (same size as input array).
+- `::typeof(x)`: Emulator prediction for a vorticity at t + Δt (same size as input array).
 """
 function (m::Emulator)(x::AbstractArray{Float32})
-    x_norm = zscore(x, m.zscore_para)                   # using Z-score trafo to normalize the spectral coeff. at t
-    y_norm = m.chain(x_norm |> gpu)                     # emulator calculates the normalized spectral coeff. at t + t_step
-    return inv_zscore(y_norm, m.zscore_para) |> cpu     # using inverse Z-score trafo to get (normal) spectral coeff. at t + t_step
-end
+
+    # Using z-score to normalize spectral coeff. at t
+    x_norm = zscore(x, m.zscore_para)       
+
+    # Emulator calculates the normalized coeff. at t + t_step
+    y_norm = m.chain(x_norm |> gpu)                                         # chain is on gpu, send x_norm also to gpu
+
+    # Using inverse z-score to get normal spectral coeff. at t + t_step
+    return inv_zscore(y_norm, m.zscore_para) |> cpu                         # y_norm is on gpu, get it back to cpu
 
 
 """

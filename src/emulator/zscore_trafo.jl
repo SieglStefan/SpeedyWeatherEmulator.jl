@@ -12,7 +12,7 @@ Container for the parameters of a Z-score transformation.
 
 # Notes
 - Typically computed from the **training set only** to avoid data leakage.
-- For each coefficient indexed i: z_i = (x_i - μ_i) / σ_i
+- For each coefficient indexed i: z_i = (x_i - μ_i) / (σ_i + eps)
 """
 struct ZscorePara{F<:AbstractVector{Float32}}
     µ::F

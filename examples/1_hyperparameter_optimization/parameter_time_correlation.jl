@@ -65,11 +65,11 @@ p = Plots.scatter(params, times./60;
                     ylabel="Training time / min",
                     xticks = (0:1e5:5e5, ["0","10⁵","2×10⁵","3×10⁵","4×10⁵","5×10⁵"]),
                     xformatter = x -> "$(Int(round(x/1e5)))×10⁵",
-                    plot_titlefontsize=25,              # title size
-                    guidefont=13,                       # axis title size
-                    tickfont=12,                        # tick size
-                    legendfontsize=12,                  # legend size
-                    markersize=8)                       # marker size
+                    plot_titlefontsize=23,              # title size
+                    guidefont=12,                       # axis title size
+                    tickfont=11,                        # tick size
+                    legendfontsize=10,                  # legend size
+                    markersize=6)                       # marker size
 
 
 # Display and save image                

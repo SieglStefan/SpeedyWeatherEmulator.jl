@@ -7,7 +7,6 @@ using SpeedyWeather
 Generate raw vorticity data with SpeedyWeather.jl based on the given simulation parameters.
 
 # Description
-- Prepares a raw-data folder using `prepare_folder`.
 - Runs the barotropic model with spectral truncation `sim_para.trunc` and time step `sim_para.t_step`.
 - For each initial condition (IC), creates a new run subfolder and stores the simulated vorticity.
 - If `overwrite=false` and data already exist, generation is canceled.
@@ -41,7 +40,6 @@ function generate_raw_data(sim_para::SimPara; overwrite::Bool=false, path::Strin
     # Unpack simulation parameters
     (; trunc, n_data, n_ic, n_spinup, t_step, initial_cond) = sim_para 
 
-
     # Delete old raw_data folder
     output_path, cancel = delete_data(sim_para, overwrite=overwrite, type="raw_data", path=path)
 
@@ -65,15 +63,15 @@ function generate_raw_data(sim_para::SimPara; overwrite::Bool=false, path::Strin
         model = BarotropicModel(spectral_grid; output=output)
 
         # Forecast loop for different initial conditions
-        for _ in 1:n_ic                                # looping over the number of initial conditions
-            sim = initialize!(model)                    # initialize the model with new (random) initial conditions
+        for _ in 1:n_ic                                     # looping over the number of initial conditions
+            sim = initialize!(model)                        # initialize the model with new (random) initial conditions
 
             if initial_cond !== nothing
-                set!(sim, vor=initial_cond)             # if specific IC are defined, set the simulation to them
+                set!(sim, vor=initial_cond)                 # if specific IC are defined, set the simulation to them
             end
 
-            t_max = (n_spinup + n_data) * t_step     # calculate the whole forecast time
-            run!(sim, period=Hour(t_max), output=true)               # run the simulation
+            t_max = (n_spinup + n_data) * t_step            # calculate the whole forecast time
+            run!(sim, period=Hour(t_max), output=true)      # run the simulation
         end
     end
 

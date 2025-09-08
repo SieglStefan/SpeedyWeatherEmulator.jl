@@ -2,7 +2,7 @@ using JLD2
 
 
 """
-    data_path(sim_para::SimPara; type::String)
+    data_path(sim_para::SimPara; type::String, path::String="")
 
 Creates the folder or file path for storing data associated with `sim_para`.
 
@@ -27,37 +27,43 @@ data_path(sim_para; type="sim_data")
 ```
 """
 function data_path(sim_para::SimPara; type::String, path::String="")
+    
+    # Default data path
     if path === ""
         folder = joinpath(@__DIR__, "..", "..", "data", type)
+    # User-custom data path
     else
         folder = path
     end
     
+    # If data type is in ["raw_data"] create a folder and no .jld2
     if type in ["raw_data"]
         file_ex = ""
     else
         file_ex = ".jld2"
     end
     
+    # Create storing/loading name from simulation parameters
     name = type * "_" *
         "T$(sim_para.trunc)_" *                                         
         "ndata$(sim_para.n_data)_" *
         "IC$(sim_para.n_ic)_" *
         "ID$(sim_para.id_key)" * file_ex
 
+    # Return data path
     return normpath(joinpath(folder, name))
 end
 
 
 
 """
-    delete_data(sim_para::SimPara; type::String, overwrite::Bool=false)
+    delete_data(sim_para::SimPara; type::String, overwrite::Bool=false, path::String="")
 
 Delete existing data of `type` `"raw_data"`, `"sim_data"`, `"emulator"` or `"losses"`
 
 # Description
 - Checks whether the path already exists.
-- If `overwrite=true`: deletes existing content and creates a new folder if `type = "raw_data"`.
+- If `overwrite=true`: deletes existing content.
 - If `overwrite=false`: keeps existing data untouched and sets `cancel_sim=true` to cancel current process.
 
 # Arguments
@@ -82,23 +88,33 @@ delete_data(sim_para; type="sim_data")
 ```
 """
 function delete_data(sim_para::SimPara; type::String, overwrite::Bool=false, path::String="")
+    
+    # Get data path
     data = data_path(sim_para, type=type, path=path)
 
+    # Handle data deleting
     cancel_sim = false
+
+    # File exists
     if isdir(data) || isfile(data)
         @warn "Data of type '" * type * "' and parameters trunc=$(sim_para.trunc), n_data=$(sim_para.n_data), n_ic=$(sim_para.n_ic) and ID=$(sim_para.id_key) already exists!"
         
+        # If overwriting is allowed, delete data
         if overwrite
             rm(data; recursive=true, force=true)
             @info "Data '$data' was deleted."
+
+        # If overwriting is not allowed, cancel process
         else
             @info "Data '$data' stays untouched. Set parameter 'overwrite::Bool = true' to overwrite the existing data or use a unique ID!"
             cancel_sim = true
         end
-        
+
+    # File does not exist
     else
         @info "There was no '$data' !"
     end
 
+    # Return data path and cancel status
     return data, cancel_sim
 end

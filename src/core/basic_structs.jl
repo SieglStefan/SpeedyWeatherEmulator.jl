@@ -42,7 +42,7 @@ Convenience constructor for `SimPara`.
 - `n_ic::Int`: Number of simulated initial conditions (independent runs).
 - `n_spinup::Int = 9`: Number of spin-up steps discarded before sampling (Default data sampling begins at t=10h).
 - `t_step::Real = 1.0`: Physical time step length.
-- `initial_cond = nothing`: Optional generator for initial conditions; `if nothing`, random ICs are used. Can also be a `Function` or any callable object.
+- `initial_cond = nothing`: Optional generator for initial conditions; if `nothing`, random ICs are used. Can also be a `Function` or any callable object.
 - `id_key::String = ""`: Additional identifier to disambiguate saved datasets with identical (`trunc`, `n_data`, `n_ic`).
 
 # Returns

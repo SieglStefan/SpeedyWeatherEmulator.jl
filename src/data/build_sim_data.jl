@@ -36,12 +36,12 @@ This constructor:
 4. for each stored step `step ∈ {n_spinup+1, …, n_spinup + n_data}`:
    - extracts the spectral vorticity `vor`,
    - writes `real(vor)` to rows `1:n_coeff` and `imag(vor)` to rows `n_coeff+1:2n_coeff`,
-   - stores at time index `step + 1 - n_spinup`.
+   - stores at time index `step - n_spinup`.
 
 # Arguments
 - `sim_para::SimPara{F}`: Container for parameters that define the simulation and data storage; 
     **must match** the generated raw data on disk.
-- `path::String = ""`: Optional absolute path of storaged `raw_data`.  
+- `path::String = ""`: Optional absolute path of stored `raw_data`.  
     If left empty, the function defaults to the package's internal `data/<type>` folder.
 
 # Returns
@@ -82,19 +82,21 @@ function SimData(sim_para::SimPara, path::String="")
         file_subfolder = @sprintf("run_%04d", ic)
         filepath = normpath(joinpath(raw_data_folder, file_subfolder, "output.jld2"))
 
-        # Load file and storage data
+        # Load file and get data
         file = jldopen(filepath, "r")
         out = file["output_vector"]
         close(file)
 
-        # Scaling factor
+        # Scaling factor (here: Earth's radius)
         sc = Float32(out[1].scale[])
 
         # Extracting n_data datapoints per initial condition
         for step in n_spinup+1:n_spinup+n_data
+            # Access vorticity
             prog = out[step]
             vor = vec(prog.vor[:,:,1] ./sc)
 
+            # Splitting the complex vortivity into real and imaginary part and fill up data vector
             data[1:n_coeff, step-n_spinup, ic] .= Float32.(real.(vor))
             data[n_coeff+1:2*n_coeff, step-n_spinup, ic] .= Float32.(imag.(vor))
         end

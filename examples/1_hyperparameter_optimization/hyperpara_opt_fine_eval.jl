@@ -89,7 +89,7 @@ p = Plots.plot(plots...; layout=(2,2),
                     size=(1000,900), margin=8mm,
                     xscale=:log10, 
                     xticks = ([5e4, 1e5, 2e5], ["5×10⁴", "10⁵", "2×10⁵"]), 
-                    plot_titlefontsize=25,           
+                    plot_titlefontsize=23,           
                     guidefont=13,                
                     tickfont=12,                       
                     legendfontsize=12)                 

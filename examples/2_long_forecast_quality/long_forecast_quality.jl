@@ -19,7 +19,7 @@ sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Loading the best emulator from the hyperparameter optimiaztion
-sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W1024")
+sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W640")
 em = load_data(Emulator, sim_para_emulator)
 
 # Define container for rel. errors for different forecast lengths
@@ -46,31 +46,31 @@ end
 
 # Plot just the rel. error
 p1 = Plots.scatter( err_vec;                     
-                    title="Emulator Comparison to Identiy for Long Forecasts",
+                    title="Long Forecast Emulator Quality",
                     xlabel="Forecast length / h",
                     ylabel="Rel. forecast error / %",
                     legend=false,
                     xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
                     xformatter = x -> "$(Int(round(x/1e5)))×10⁵",
-                    plot_titlefontsize=25,              # title size
-                    guidefont=13,                       # axis title size
-                    tickfont=12,                        # tick size
-                    legendfontsize=12,                  # legend size
+                    titlefont=font(22),              # title size
+                    guidefont=15,                       # axis title size
+                    tickfont=13,                        # tick size
+                    legendfontsize=13,                  # legend size
                     markersize=5)                       # marker size     
 
 # Plot comparing the trained emulator and the identiy emulator on log-axes
 p2 = Plots.scatter( [err_vec, err_vec0];
                     label=["Emulator" "Identity"],
-                    title="Emulator Comparison to Identiy for Long Forecasts",
+                    title="Emulator Comparison to Identity",
                     xlabel="Forecast length / h",
                     ylabel="Rel. forecast error / %",
                     yscale=:log10, 
                     yticks = ([10,100,1000], ["10", "10²", "10³"]),
                     xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
-                    plot_titlefontsize=25,              # title size
-                    guidefont=13,                       # axis title size
-                    tickfont=12,                        # tick size
-                    legendfontsize=12,                  # legend size
+                    titlefont=font(22),              # title size
+                    guidefont=15,                       # axis title size
+                    tickfont=13,                        # tick size
+                    legendfontsize=13,                  # legend size
                     markersize=5,                       # marker size
                     legend=:bottomright)
 
@@ -85,7 +85,7 @@ Plots.savefig(p2, joinpath(@__DIR__, "plots", "long_forecast_comp_id.pdf"))
 
 # Define the time horizons for comparison and used initial condition
 horizons = [1, 6, 24, 48]
-ic = 9
+ic = 6
 
 
 # Loop for different time horizons
@@ -102,8 +102,9 @@ for h in horizons
     end
 
     # Create heatmap plots
-    fig_sw = plot_heatmap(vor_sw, trunc=5, title="")
-    fig_em = plot_heatmap(vor_em, trunc=5, title="")
+    colorrange = (-2.5e-5, +2.5e-5)
+    fig_sw = plot_heatmap(vor_sw, trunc=5, title="", range=colorrange)
+    fig_em = plot_heatmap(vor_em, trunc=5, title="", range=colorrange)
 
     # Display the figures
     display(fig_sw)

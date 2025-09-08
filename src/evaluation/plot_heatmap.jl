@@ -15,11 +15,11 @@ Plot a heatmap of a vorticity field reconstructed from a spectral coefficient ve
 # Arguments
 - `vec::AbstractVector{Float32}`: Spectral coefficient vector (real/imag stacked).
 - `trunc::Int`: Spectral truncation of the model (e.g. 5 for T5).
-- `title::String = ""`: Optional argument for different plot titles (e.g. differen simulation parameters).
+- `title::String = ""`: Optional argument for different plot titles (e.g. different simulation parameters).
 - `range::Tuple{Real,Real} = (-5e-5, +5e-5)`: Defines the color range of the heatmap plot.
 
 # Returns
-- `::CairoMakie.Plot`: Heatmap figure object.
+- `::CairoMakie.Heatmap`: Heatmap figure object.
 
 # Examples
 ```julia
@@ -65,12 +65,13 @@ L = vec_to_ltm(vec, 5)
 ```
 """
 function vec_to_ltm(vec::AbstractVector{Float32}, trunc::Int)
+    # Define LTM structure
     N = trunc+2
     M = trunc+1
     n_coeff = calc_n_coeff(trunc=trunc)
 
     # Defining the order of the LTM: Mat(C, NxM)
-    L = rand(LowerTriangularMatrix{ComplexF32}, N, M)
+    L = zeros(LowerTriangularMatrix{ComplexF32}, N, M)
     @info "Creating a $N x $M LowerTriangularMatrix"
 
     # Filling the LTM up
@@ -78,14 +79,10 @@ function vec_to_ltm(vec::AbstractVector{Float32}, trunc::Int)
 
     for j in 1:M
         for i in j:N
-            if j == N && i == N
-                continue
-            else
-                real_part = vec[counter]
-                imag_part = vec[n_coeff+counter]
-                L[i,j] = ComplexF32(real_part, imag_part)
-                counter = counter + 1
-            end
+            real_part = vec[counter]
+            imag_part = vec[n_coeff+counter]
+            L[i,j] = ComplexF32(real_part, imag_part)
+            counter = counter + 1
         end
     end
 

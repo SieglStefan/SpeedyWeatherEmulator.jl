@@ -79,31 +79,32 @@ function FormattedData( sim_data::SimData;
                         splits::NamedTuple{(:train, :valid, :test),<:Tuple{Vararg{Real,3}}} = 
                             (train=0.7, valid=0.15, test=0.15))
 
+    # Unpack simulation parameters
     (; sim_para, data) = sim_data
 
+    # Calculating split fractions and numbers
     total = splits.train + splits.valid + splits.test
     train_frac = splits.train / total
     valid_frac = splits.valid / total
 
+    n_pairs = (sim_para.n_data - 1) * sim_para.n_ic             # total number of data pairs coming from sim_data
+    n_train = round(Int, train_frac * n_pairs)                  # number of data pairs in the training set
+    n_valid = round(Int, valid_frac * n_pairs)                  # number of data pairs in the validation set
 
-    n_pairs = (sim_para.n_data - 1) * sim_para.n_ic                                # total number of data pairs coming from sim_data
-    n_train = round(Int, train_frac * n_pairs)                     # number of data pairs in the training set
-    n_valid = round(Int, valid_frac * n_pairs)
 
+    # Creating data pairs vor_i and vor_{i+1}
+    x = reshape(data[:, 1:end-1, :], size(data,1), :)           # list of vor(t)            (vor_1, vor_2,..., vor_{N-1})
+    y = reshape(data[:, 2:end,   :], size(data,1), :)           # list of vor(t+t_step)     (vor_2, vor_3,..., vor_N)
 
-    # Data pair components
-    x = reshape(data[:, 1:end-1, :], size(data,1), :)                                  # list of vor(t)            (vor_1, vor_2,..., vor_{N-1})
-    y = reshape(data[:, 2:end,   :], size(data,1), :)                                  # list of vor(t+t_step)     (vor_2, vor_3,..., vor_N)
-
-    # Creating training pairs vor_i and vor_{i+1}
+    # Calculating splitted data pairs
     x_train = x[:, 1:n_train]
     y_train = y[:, 1:n_train]
 
     x_valid = x[:, (n_train+1):(n_train+n_valid)]
     y_valid = y[:, (n_train+1):(n_train+n_valid)]
 
-    x_test = x[:, (n_train+n_valid+1):n_pairs]
-    y_test = y[:, (n_train+n_valid+1):n_pairs]
+    x_test = x[:, (n_train+n_valid+1):n_pairs]                  # remaining data
+    y_test = y[:, (n_train+n_valid+1):n_pairs]                  # remaining data
 
 
     return FormattedData(sim_para, 

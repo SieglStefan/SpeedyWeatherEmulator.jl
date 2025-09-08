@@ -24,9 +24,9 @@ Compare emulator predictions against SpeedyWeather.jl reference data.
 - `em::Emulator`: Trained emulator to evaluate.
 - `x_test::AbstractArray{Float32, 2}`: Test inputs (vorticity coefficients at t) of form (2 * n_coeff, N).
 - `y_test::AbstractArray{Float32, 2}`: Reference outputs from SpeedyWeather.jl (at t+n_it*Δt) of form (2 * n_coeff, N).
-- `n_it::Int64`: Number of timesteps compared.
-- `output::Bool=false`: If true, print errors to STDOUT.
-- `all_coeff::Bool=false`: If true, print relative error for each coefficient.
+- `n_it::Int`: Number of timesteps compared.
+- `output::Bool=false`: If true, print to STDOUT.
+- `all_coeff::Bool=false`: If true (and also `output=true`) print relative error for each coefficient.
 - `id_em::Bool=false`: The identity emulator is used (em(vor(t)) = vor(t))
 
 # Returns
@@ -40,8 +40,8 @@ Compare emulator predictions against SpeedyWeather.jl reference data.
 
 # Examples
 ```julia
-emu, losses = train_emulator(nn, fd)
-compare_emulator(emu; 
+em, losses = train_emulator(nn, fd)
+compare_emulator(em; 
     x_test=fd.data_pairs.x_test,
     y_test=fd.data_pairs.y_test,
     all_coeff=true)
@@ -55,16 +55,16 @@ function compare_emulator(em::Emulator;
                             all_coeff::Bool=false,
                             id_em::Bool=false)
     
-
+    # Define input and target
     vor_em = x_test                        
     vor_sw = y_test
 
-    # Create comparison vorticities
-    n_del = em.sim_para.n_data - 1
+    # Create comparison vorticities depending on n_it
+    n_split = em.sim_para.n_data - 1
     n_data_pairs = size(x_test,2)
 
-    cols_skip_x = vcat([i+n_del-n_it+1:i+n_del-1 for i in 1:n_del:n_data_pairs]...)
-    cols_skip_y = vcat([i:i+n_it-2 for i in 1:n_del:n_data_pairs]...)
+    cols_skip_x = vcat([i+n_split-n_it+1:i+n_split-1 for i in 1:n_split:n_data_pairs]...)
+    cols_skip_y = vcat([i:i+n_it-2 for i in 1:n_split:n_data_pairs]...)
 
     cols_delete_x = cols_skip_x[cols_skip_x .<= n_data_pairs]
     cols_delete_y = cols_skip_y[cols_skip_y .<= n_data_pairs]
@@ -73,13 +73,13 @@ function compare_emulator(em::Emulator;
     vor_sw = vor_sw[:, setdiff(1:end, cols_delete_y)]
 
 
+    # Use the emulator n_it - times on vor_em for a n_it * t_step forecast, if identity emulator is not requested
     if id_em == false
         for _ in 1:n_it
             vor_em = em(vor_em)
         end
     end
 
-    
     # Calculate mean relative error
     rel_err = abs.(vor_em .- vor_sw) ./ (abs.(vor_sw) .+ eps(Float32)) .* 100
     mean_rel_err = vec(mean(rel_err, dims=2))
@@ -88,25 +88,18 @@ function compare_emulator(em::Emulator;
     mean_mean_rel = mean(mean_rel_err)
     max_mean_rel = maximum(mean_rel_err)
 
-    # Print results
-
+    # Print results (if output=true)
     if output
         println("--------------------------------------")
         println("Mean relative error: ", round(mean_mean_rel; digits=3), " %")
         println("Max relative error:  ", round(max_mean_rel; digits=3), " %")
         println("--------------------------------------")
 
-        # Prints mean relative error for every coefficient
+        # Prints mean relative error for every coefficient (if all_coeff=true)
         if all_coeff
             for i in 1:axis(mean_rel_err)
-                # Some coefficients are always zero (in sim_data)
-                if all(abs.(vor_sw[i, :]) .< eps(Float32))          
-                    println("coeff $i: rel. error = ",
-                        round(mean_rel_err[i]; digits=3), " %, ", "\t (SW coeff. is always 0!!!)")
-                else
-                    println("coeff $i: rel. error = ",
-                        round(mean_rel_err[i]; digits=3), " %, ",)
-                end
+                # Print the coefficients to STDOUT
+                println("coeff $i: rel. error = ", round(mean_rel_err[i]; digits=3), " %")
             end
             println("--------------------------------------")
         end

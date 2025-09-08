@@ -1,5 +1,6 @@
 using SpeedyWeatherEmulator
-
+using Random
+using CUDA, cuDNN
 
 ### This Code is very similar to the counterpart "hyperpara_opt_coarse_eval.jl":
 #       - Parts where the code differs, are marked with comments

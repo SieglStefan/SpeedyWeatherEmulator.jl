@@ -1,4 +1,6 @@
 using SpeedyWeatherEmulator
+using Random
+using CUDA, cuDNN
 
 
 # Fix the seed for reproducibility

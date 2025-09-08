@@ -25,7 +25,7 @@ sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Loading the best emulator from the hyperparameter optimiaztion
-sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W1024")
+sim_para_emulator = SimPara(trunc=TRUNC, n_data=N_DATA, n_ic=N_IC, id_key="_hyperpara_L1_W640")
 em = load_data(Emulator, sim_para_emulator)
 
 
@@ -73,17 +73,17 @@ end
 # Plot comparing the trained emulator and the identiy emulator on log-axes
 p1 = Plots.scatter( [err_vec, err_vec0];
                     label=["Emulator" "Identity"],
-                    title="Emulator Comparison to Identiy for Rossby-Haurwitz Wave",
+                    title="Emulator Comparison to Identiy",
                     xlabel="Forecast length / h",
                     ylabel="Rel. forecast error / %",                   
                     yscale=:log10, 
                     yticks = ([10,100,1000], ["10", "10²", "10³"]),
                     xticks = ([1,3,6,12,24,48], ["1", "3", "6", "12", "24", "48"]),
-                    plot_titlefontsize=25,   # Titelgröße
-                    guidefont=13,            # Achsenbeschriftungen
-                    tickfont=12,             # Zahlen an den Achsen)
-                    markersize=5,
-                    legendfontsize=12,
+                    titlefont=font(18),   # Titelgröße
+                    guidefont=13,                       # axis title size
+                    tickfont=11,                        # tick size
+                    legendfontsize=11,                  # legend size
+                    markersize=5,                       # marker size
                     legend=:bottomright)
 
 # Display and save plots
@@ -111,8 +111,9 @@ for h in horizons
     end
 
     # Create heatmap plots
-    fig_sw = plot_heatmap(vor_sw, trunc=5, title="speedyweather: $h")
-    fig_em = plot_heatmap(vor_em, trunc=5, title="emulator: $h")
+    colorrange = (-5e-5, +5e-5)
+    fig_sw = plot_heatmap(vor_sw, trunc=5, title="", range=colorrange)
+    fig_em = plot_heatmap(vor_em, trunc=5, title="", range=colorrange)
 
     display(fig_sw)
     display(fig_em)

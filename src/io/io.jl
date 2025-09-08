@@ -29,11 +29,12 @@ Save simulation- or training-related data (`SimData`, `Emulator`, `Losses`) usin
 ```julia
 sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="demo")
 sim_data = SimData(sim_para)
-save_data(sim_data; type="sim_data", overwrite=true)
+save_data(sim_data; overwrite=true)
 ```
 """
 function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false, path::String="")
 
+    # Choose type depending on data to be saved
     if data isa SimData
         type = "sim_data"
     elseif data isa Emulator
@@ -44,17 +45,20 @@ function save_data(data::Union{SimData, Emulator, Losses}; overwrite::Bool=false
         @error "Data type '$(typeof(data))' is not supported!"
     end
 
+    # Delete existing data, if allowed
     sim_para = data.sim_para
     data_path, cancel_sim = delete_data(sim_para, overwrite=overwrite, type=type, path=path)
 
+    # Overwriting is not allowed -> cancel data saving
     if cancel_sim
         @error "Data saving was canceled, because data already exists!"
         return nothing
-    else
 
+    # Overwriting is allowed -> save data 
+    else
         file_path = normpath(joinpath(data_path))
 
-        jldsave(file_path; data)                                 # Save the simulation data
+        jldsave(file_path; data)                         
         @info "Data of type '" * type * "' and parameters trunc=$(sim_para.trunc), n_data=$(sim_para.n_data), n_ic=$(sim_para.n_ic) and ID=$(sim_para.id_key) was saved!"
 
         return nothing
@@ -88,6 +92,7 @@ sim_data_loaded = load_data(SimData, sim_para)
 """
 function load_data(::Type{T}, sim_para::SimPara; path::String="") where {T<:Union{SimData, Emulator, Losses}}
 
+    # Choose type depending on data to be loaded
     if T <: SimData
         type = "sim_data"
     elseif T <: Emulator
@@ -98,10 +103,11 @@ function load_data(::Type{T}, sim_para::SimPara; path::String="") where {T<:Unio
         @error "Data type '$T' is not supported!"
     end
 
+    # Create data path and load data
     path = data_path(sim_para, type=type, path=path)
-
-    data = JLD2.load(path, "data")::T                  # Load the simulation data
-    @info "Data '$path' was loaded!"                    # Information, if and from where the data is loaded
+    
+    data = JLD2.load(path, "data")::T             
+    @info "Data '$path' was loaded!"
 
     return data
 end

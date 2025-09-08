@@ -89,11 +89,11 @@ end
 
 # Combine subplots to a single plot
 p = Plots.plot(plots...;  layout=(2,2), 
-                    plot_title="Results of Coarse Hyperparameter Optimization", 
+                    plot_title="Results of Coarse Hyperparameter Optimization",           
                     size=(1000,900), margin=8mm,
                     xscale=:log10,
                     xticks = ([1e4, 3e4, 1e5, 3e5], ["10⁴", "3×10⁴", "10⁵", "3×10⁵"]),
-                    plot_titlefontsize=25,              # title size
+                    plot_titlefontsize=23,              # title size
                     guidefont=13,                       # axis title size
                     tickfont=12,                        # tick size
                     legendfontsize=12)                  # legend size

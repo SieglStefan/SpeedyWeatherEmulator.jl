@@ -82,13 +82,13 @@ function train_emulator(nn::NeuralNetwork,
         @showprogress for epoch in 1:n_epochs
             # Training loop
             for xy_cpu in loader_train                                  # loop over every batches of loader_train
-                x,y = xy_cpu |> gpu                                     # shifting the training data to the GPU
+                x,y = xy_cpu |> gpu                                     # send the training data to the GPU
                 loss, grads = Flux.withgradient(em.chain) do chain      # calculating training losses and gradients
-                    Flux.mse(chain(x), y)                               
+                    Flux.mse(chain(x), y)                               # calculate MSE                      
                 end
 
                 Optimisers.update!(opt_state, em.chain, grads[1])       # update the Optimiser
-                push!(losses0.train, Float32(loss))                      # store the training losses
+                push!(losses0.train, Float32(loss))                     # store the training losses
             end
 
             # Adjust the learning rate every 30 epochs
@@ -100,17 +100,18 @@ function train_emulator(nn::NeuralNetwork,
             # Validation loop
             for (x,y) in loader_valid                                   # loop over every batches of loader_valid
                 loss = Flux.mse(em.chain(x), y)                         # calculating validation losses
-                push!(losses0.valid, Float32(loss))                      # store the validation losses
+                push!(losses0.valid, Float32(loss))                     # store the validation losses
             end
         end
     end
 
-    # Reinitialize Losses and emulator
+
+    # Reinitialize Losses with training time
     (; sim_para, train, valid, bpe_train, bpe_valid) = losses0
     losses = Losses(sim_para, train, valid, bpe_train, bpe_valid, Float32(train_time))
 
 
-    # Compares the emulator with the training set for a single timestep.
+    # Compares the emulator using the training set for a single timestep.
     compare_emulator(em, x_test=fd.data_pairs.x_test, y_test=fd.data_pairs.y_test, output=true)
 
     return em, losses

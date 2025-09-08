@@ -23,28 +23,6 @@ Depth = 2
 ```
 
 
-## Planned implementations / ToDos:
-
-Planned implementations:
-
-- Implementing code for further testing:
-    - Emulator quality for Rossby-Haurwitz wave i.c. (as report results / example)
-    - Emulator quality for multiple consecutive time steps (e.g. 12 * 1h) (as package function + report results)
-    - \*\*\*Emulator quality for different simulation data parameters (e.g. for higher truncation) (as report results / example)
-- \*\*\*Implementing a (simple) hyperparameter optimization (as package function + report results)
-
-(\*\*\*: if not necessary and no time is left until the deadline)
-
-ToDos:
-
-- Writing test functions (not yet done, since the program's basic structure has only recently been set up)
-- Checking the code quality (e.g. right types, type stability,...)
-- Thorough testing of the emulator under various conditions to obtain results for the report
-- Completion and revision of docstrings and code comments
-- Completion and revision of GitHub documenation
-- Writing the project report
-
-
 ## Installation
 ```julia
 using Pkg
