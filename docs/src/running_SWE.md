@@ -1,15 +1,15 @@
 # Running SpeedyWeatherEmulator.jl
 
 This section introduces the core functionality of the package.  
-After a short review of the basic workflow of the package it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate its performance.
+After a short review of the basic workflow of the package it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate and its performance.
 
 
 
-## Basic workflow
+## Basic Workflow
 
-This brief introduction to the workflow is meant to illustrate how the different steps, functions, and data types of the package interact. I have deliberately omitted details such as additional functions, parameters, or default values. These can be found in the sections below or seen in action in the examples.
+This brief introduction to the workflow is meant to illustrate how the different steps, functions, and data types of the package interact. I have deliberately omitted details such as additional functions, parameters, or default values. These can be found in the sections below, seen in action in the examples or looked up in the source code.
 
-Every workflow in SpeedyWeatherEmulator.jl begins by defining the simulation parameters in a `SimPara` object. These parameters control the spectral truncation, the number of timesteps to be stored, the number of independent initial conditions and more:
+Every workflow in SpeedyWeatherEmulator.jl begins by defining the simulation parameters in a `SimPara` object. These parameters control the spectral truncation, the number of datapoints to be stored per i.c., the number of independent initial conditions and more:
 
 ```julia
 sim_para = SimPara(trunc=5, n_data=20, n_ic=500)
@@ -52,11 +52,11 @@ display(plot_losses(losses))
 
 ![Loss curves](assets/doc_basicworkflow_lossplot.png)
 
-Finally, we can directly compare emulator predictions with SpeedyWeather.jl outputs. Here we select one vorticity state (`vor0`), its SpeedyWeather forecast (`vorSW`), and the emulator’s prediction (`vorEM`) after three steps. 
+Finally, we can visually compare emulator predictions with SpeedyWeather.jl outputs. Here we select one vorticity state (`vor0`), its SpeedyWeather forecast (`vorSW`), and the emulator’s prediction (`vorEM`) after six steps. This corresponds to a six hour forecast:
 
 ```julia
 vor0 = sim_data.data[:,10,500]
-vorSW = sim_data.data[:,13,500]
+vorSW = sim_data.data[:,16,500]
 vorEM = em(em(em(vor0)))
 ```
 
@@ -80,7 +80,7 @@ The difference between the initial vorticity and the final vorticity is small, b
 
 
 
-## Generating and formatting data
+## Generating and Formatting Data
 
 Before training a neural network emulator, we need to generate and structure data.  
 This process has three steps: defining the simulation parameters, running SpeedyWeather.jl to create raw data, and finally preparing formatted datasets for machine learning.
@@ -94,12 +94,28 @@ This struct collects the essential parameters of a barotropic SpeedyWeather.jl s
 - the number of independent initial conditions (`n_ic`),  
 - and additional metadata such as spin-up length, timestep size, or a unique `id_key`.
 
-Together, these parameters determine both the structure of the generated data and the folder name under which it is stored.  
-For example:
+Together, these parameters determine both the structure of the generated data and the folder name under which it is stored. For example:
 
 ```julia
-sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test")
+sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test1")
 ```
+
+It should be emphasized once again that only the fields mentioned above are responsible for saving and loading data. In general, it is recommended not to rely solely on the identifiers `trunc`, `n_data`, and `n_ic`, but to always provide an additional `id_key` as well! See [Saving/Loading Data](#savingloading-data) for details.
+
+Furthermore, there are additional simulation parameters with default values, summarized as follows:
+
+```julia
+SimPara{F}
+├ trunc::Int
+├ n_data::Int
+├ n_ic::Int
+├ n_spinup::Int = 9
+├ t_step::Float32 = 1.0
+├ initial_cond::F = nothing
+└ id_key::String = ""
+```
+
+For example, a custom initial condition can be defined, or the time step can be adjusted.
 
 ### Generating Raw Data
 With the simulation parameters defined, raw data can be generated directly from SpeedyWeather.jl:
@@ -108,41 +124,41 @@ With the simulation parameters defined, raw data can be generated directly from 
 generate_raw_data(sim_para; overwrite=true)
 ```
 
-This command creates a folder with one subdirectory per initial condition and stores the corresponding simulation output.
-Each run includes spin-up steps, which are used internally but not stored in the final dataset.
+This command creates a folder with one subdirectory per initial condition and stores the corresponding raw simulation output.
 
-Generating raw data can be slow and memory-intensive, since not only vorticity but also auxiliary diagnostics are written to disk.
-It should therefore be used sparingly, ideally only when new datasets are required.
-If existing data should not be overwritten, a new `id_key` can be supplied to disambiguate different runs.
+Generating raw data can be slow and memory-intensive, since not only vorticity but also other prognostic variables are written to disk. Output of diagnostic variables is disabled.
+It should therefore be used sparingly, ideally only when new datasets are absolutely required! Instead, it is strongly recommended to use `SimData` objects as often as possible.
 
 ### Structured Simulation Data
-The raw output is then loaded into a consistent array layout using the `SimData` constructor:
+In order to make use of raw data, it must be loaded into a `SimData` object, which is handled by a convenience constructor:
 
 ```julia
 sim_data = SimData(sim_para)
 ```
 
-The resulting tensor has dimensions \[\text{data} \in \mathbb{R}^{(2 \cdot n_\text{coeff}) \times n_\text{data} \times n_\text{ic}}\] where real and imaginary parts of the spectral coefficients are stacked along the first axis.
-This format is optimized for efficient slicing over time and initial conditions, and serves as the basis for all later steps.
+The resulting tensor has dimensions $\text{data} \in \mathbb{R}^{(2 \cdot n_\text{coeff}) \times n_\text{data} \times n_\text{ic}}$ where real and imaginary parts of the spectral coefficients are stacked along the first axis.
+This format is optimized for efficient slicing over time and initial conditions, and serves as the basis for all later steps. It also consumes significantly less memory than the previous raw data and can be easily handled using the methods from [Saving/Loading Data](#savingloading-data).
 
 ### Preparing Formatted Data
-For machine learning, we need to turn continuous time series into input–output pairs.
+For machine learning, we need to turn the discrete time series into input–output pairs.
 The `FormattedData` constructor automates this process by pairing consecutive timesteps:
 
 ```math
 (x, y) = \bigl( \mathrm{vor}(t), \, \mathrm{vor}(t + \Delta t) \bigr)
 ```
 
-It then reshapes all samples into column vectors and splits the dataset into training, validation, and test sets.
-By default, the split is 70 % training, 15 % validation, and 15 % test.
+Then it splits the dataset into training, validation, and test sets. By default, the split is 70 % training, 15 % validation, and 15 % test:
 
 ```julia
-fd = FormattedData(sim_data; splits=(train=0.7, valid=0.15, test=0.15))
+fd = FormattedData(sim_data)    # results in splits=(train=0.7, valid=0.15, test=0.15)
 ```
 
-Since the targets are shifted forward in time, the total number of pairs is `(n_data − 1) * n_ic`.
-This ensures that, for instance, `y[1]` corresponds exactly to the next timestep after `x[1]`.
+However, arbitrary alternative splits can also be used. The convenience constructor internally handles non-unique splits by normalization:
 
+```julia
+fd = FormattedData(sim_data,  splits=(train=100, valid=50, test=50))    # results in splits=(train=0.5, valid=0.25, test=0.25)
+```
+Since the targets are shifted forward in time, the total number of datapairs available is `(n_data − 1) * n_ic`.
 
 
 ## Training
@@ -151,44 +167,52 @@ This involves defining an architecture, normalizing the data, building an emulat
 
 ### Neural Network Architecture
 The emulator uses a simple feed-forward neural network with ReLU activations.  
-The architecture is described by a `NeuralNetwork` object, which specifies the input/output size, the hidden layer width, and the number of hidden layers:
+The architecture is described by a `NeuralNetwork` object, which specifies the input/output dimension, the hidden layer dimension (width), and the number of hidden layers (depth).
 
 ```julia
 nn = NeuralNetwork(io_dim=54, hidden_dim=128, n_hidden=2)
 ```
 
-This compact container makes it easy to experiment with different model sizes without touching the actual Flux code.
+This compact container makes it easy to experiment with different model sizes without touching the actual Flux code. 
 
 ### Normalizsation by Z-Score
-Before training, spectral coefficients are normalized coefficient-wise to zero mean and unit variance.
-This is achieved with a `ZscorePara` struct, which stores the mean and standard deviation of the training set.
-Normalization is always based on the training data alone to avoid information leakage.
+Since the spectral coefficients have different orders of magnitude, each of them are seperately normalized before training using a Z-score transformation:
 
 ```math
-z_i = \frac{x_i - \mu_i}{\sigma_i}
+z_i = \frac{x_i - \mu_i}{\sigma_i},
 ```
 
-The emulator applies this transformation automatically when called
+where $\mu_i$ is the mean and $\sigma_i$ the standard deviation of the ith spectral coefficient in the training set. 
+This is achieved with a `ZscorePara` struct, which stores the mean and standard deviation of the training set. Normalization is always based only on the training data to avoid information leakage.
+The emulator applies this transformation automatically when called.
 
 ### The Emulator Wrapper
-The Emulator struct bundles three pieces of information:
+The Emulator struct 
+
+```julia
+Emulator{F, A<:AbstractVector{Float32}}
+├ sim_para::SimPara{F}
+├ chain::Flux.Chain
+└ zscore_para::ZscorePara{A}
+```
+
+bundles three pieces of information:
 
 - the simulation parameters of the dataset,
 - the neural network chain built from Flux,
 - the Z-score normalization parameters.
 
-This design keeps the metadata and the trained model tightly coupled.
+This design keeps the metadata and the trained model tightly coupled. 
 For convenience, an emulator can be used like a function:
 
 ```julia
-y_pred = emu(x)
+y_pred = em(x)
 ```
-
-where `x` are spectral coefficients at time `t` and the output is the emulator prediction at `t + Δt`.
+where `x` is a spectral coefficient tensor at time `t` and the output is the emulator prediction at `t + Δt`. The first dimension of `x` must equal the input/output dimension of the `NeuralNetwork` of `em()`. Furthermore, `Emulator` automatically handles moving data to the GPU (if available) and back to the CPU.
 
 ### Logging Training Progress
-During training, losses are collected in a `Losses` object.
-It stores the mean-squared errors for each batch of the training and validation sets, and later also for the test set.
+During training, losses are automatically collected in a `Losses` object.
+It stores the mean-squared errors for each batch of the training and validation sets, and also the time used for training (`training_time`) in seconds. 
 This makes it straightforward to plot learning curves and diagnose overfitting.
 
 ### Training the Emulator
@@ -199,37 +223,49 @@ The central routine is `train_emulator`, which orchestrates the entire process:
 3. Normalize training and validation data.
 4. Train with the Adam optimizer, starting with a given learning rate that halves every 30 epochs.
 5. Record training and validation losses batch-by-batch.
-6. Evaluate the trained emulator on the test set.
+6. Reinitializes the `Losses` object with the needed training time
+7. Evaluate the trained emulator on the test set.
+
+At the end, the function prints rel. error statistics of the test set to `STDOUT` and returns both the trained emulator and its recorded loss history with training time.
 
 A typical training run looks like this:
 
 ```julia
-emu, losses = train_emulator(nn, fd; batchsize=64, n_epochs=100, η0=0.0005)
+em, losses = train_emulator(nn, fd; batchsize=64, n_epochs=100, η0=0.0005)
 ```
 
-At the end, the function prints error statistics on the test set and returns both the trained emulator and its recorded loss history.
+Training times should be treated with caution. In order to compare the training times of different hyperparameters, a warm-up training must first be performed, since the initial training always takes longer.
 
 ### Evaluating Accurarcy
 To quantify performance, the function `compare_emulator` applies the trained model to unseen test inputs and compares the predictions against SpeedyWeather.jl reference outputs.
-It reports mean and maximum relative errors in percent, and can optionally display the error of each spectral coefficient separately.
+It optionally reports mean and maximum relative errors in percent, and can optionally display the error of each spectral coefficient separately.
 The function also returns the overall average error, which is useful for automated evaluation. 
-`compare_emulator` is also used in `train_emulator` for the test set.
+`compare_emulator` is also used in `train_emulator` on the test set.
 
 ```julia
-compare_emulator(emu; 
+compare_emulator(em; 
     x_test=fd.data_pairs.x_test,
     y_test=fd.data_pairs.y_test,
-    all_coeff=true)
+    all_coeff=true,
+    output=true)
 ```
 
+`compare_emulator` can also be used to compare multiple emulator steps (rollouts) by specifying the argument `n_it`:
 
-## Saving/Loading data
+```julia
+compare_emulator(em; 
+    x_test=fd.data_pairs.x_test,
+    y_test=fd.data_pairs.y_test,
+    n_it = 3)
+```
+
+## Saving/Loading Data
 
 Training an emulator often requires repeating experiments with different network architectures or datasets.  
-To make results reproducible and avoid re-running costly simulations, SpeedyWeatherEmulator.jl provides simple functions for saving and reloading data containers.
+To make results reproducible and avoid re-running costly simulations, SpeedyWeatherEmulator.jl provides simple functions for saving and reloading data containers using JLD2.
 
 ### Unified File Paths
-All saved objects — whether simulation data, trained emulators, or loss histories — are uniquely identified by their simulation parameters (`SimPara`).  
+All saved objects — whether `SimData`, `Emulator`, or `Losses` — are uniquely identified by their simulation parameters (`SimPara`).
 The helper functions `data_path` and `delete_data` ensure that every dataset receives a consistent folder or file name:
 
 - Raw data are stored in dedicated folders with one subfolder per run.  
@@ -238,38 +274,62 @@ The helper functions `data_path` and `delete_data` ensure that every dataset rec
 The file name includes truncation, number of timesteps, number of initial conditions, and the optional `id_key`, e.g.
 
 ```text
-data/sim_data/sim_data_T5_ndata50_IC200_IDdemo.jld2
+data/sim_data/sim_data_T5_ndata50_IC200_ID_demo.jld2
 ```
 
+In general, it is recommended not to rely solely on the identifiers `trunc`, `n_data`, and `n_ic`, but to always provide an additional `id_key` as well!
+
+
 ### Saving Data
-Any supported container can be saved with a single call:
+Any supported container (`SimData`, `Emulator` or `Losses`) can be saved with a single call:
 
 ```julia
 save_data(sim_data)
 save_data(emu; overwrite=true)
 ```
 
-The type of the object (`SimData`, `Emulator`, or `Losses`) is detected automatically.
-By default, existing files are not overwritten. If the same identifier is used twice, saving will be canceled unless `overwrite=true` is specified.
+In the second case existing data will be overwritten. By default, all data are stored in
+
+```julia
+SpeedyWeatherEmulator.jl/data
+├ emulator
+├ losses
+└ sim_data
+   └ sim_data_T5_ndata50_IC200_ID_demo.jld2
+```
+
+It is also possible to specify a custom path:
+
+```julia
+save_data(sim_data, path = myPath)
+```
+
+If data with the same simulation parameters already exist and `overwrite = false` (default), saving is aborted.
+
+No functions were defined for directly saving and loading raw data, since the storage structure is more complex than that of JLD2. However, this is not really necessary due to the existence of `SimData`.
+
+
 
 ### Loading Data
 Previously saved objects can be reloaded at any time:
 
 ```julia
-sim_data_loaded = load_data(sim_para; type="sim_data")
-emu_loaded      = load_data(sim_para; type="emulator")
+sim_data_loaded = load_data(SimData, sim_para)
+em_loaded      = load_data(Emulator, sim_para)
 ```
 
-The only requirement is that the `SimPara` matches the one originally used for saving.
+Here, the first argument specifies the object type to be loaded, and sim_para serves as the identifier of which one. A custom path can also be chosen again with `path = myPath`, from which the data will be loaded.
+
+
 The function returns the object in its original type, making it seamless to continue training, evaluate a stored emulator, or plot old loss curves.
 
 
 
-## Evaluation and Visualization
+## Visualization
 
-After training an emulator, it is often useful to visualize its performance and inspect example vorticity fields.  
+After training an emulator, it is often useful to visualize its performance and inspect vorticity heatmaps.  
 SpeedyWeatherEmulator.jl provides a small set of plotting functions for these purposes.  
-The plotting routines are intentionally kept simple: apart from an optional `title`, no additional styling parameters are exposed, in order to keep the interface clear and focused.
+The plotting routines are intentionally kept simple: apart from an optional `title`, almost no additional styling parameters are exposed, in order to keep the interface clear and focused.
 
 ### Loss Curves
 The function `plot_losses` visualizes the training history stored in a `Losses` object.  
@@ -282,7 +342,7 @@ It displays:
 This makes it easy to diagnose whether the network is converging properly and whether overfitting occurs.
 
 ```julia
-emu, losses = train_emulator(nn, fd)
+em, losses = train_emulator(nn, fd)
 plot_losses(losses; title="Training history (T5)")
 ```
 
@@ -303,4 +363,4 @@ plot_heatmap(vec; trunc=5, title="Random vorticity field")
 ![Heatmap Plot](assets/doc_evaluation_heatmap.png)
 
 Internally, the coefficients are converted into a lower-triangular matrix and then transformed into a physical-space grid.
-The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state.
+The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state. With the argument `range = (a, b)`, the color range of the heatmap can be adjusted.
