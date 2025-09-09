@@ -3,7 +3,7 @@
 
 ## Core
 
-Defines the fundamental data structure (`SimPara`) describing  how simulation data is parameterized. Further it contains helpful utility functions (`calc_n_coeff`, `is_coeff_zero`).
+Defines the fundamental data structure (`SimPara`) describing  how simulation data is parameterized. Further it contains helpful utility functions (`calc_n_coeff`).
 
 ```@autodocs
 Modules = [SpeedyWeatherEmulator]
@@ -60,7 +60,7 @@ Private = false
 ## Evaluation
 
 Handles evaluation and visualization of emulator and simulation output.
-This includes plotting forecast stability for SpeedyWeather.jl runs (`plot_forecast_test`), plotting loss plots (`plot_losses`), and reconstructing vorticity fields from spectral coefficients as heatmaps (`plot_heatmap`).
+This includes plotting loss plots (`plot_losses`), and reconstructing vorticity fields from spectral coefficients as heatmaps (`plot_heatmap`).
 
 ```@autodocs
 Modules = [SpeedyWeatherEmulator]

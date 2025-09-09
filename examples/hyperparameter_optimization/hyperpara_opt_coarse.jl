@@ -17,8 +17,8 @@ sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Define the parameters for the coarse hyperparameter optimization
-L_list = [1,2,3]                        # number of hidden layers
-W_list_coarse = [64, 128, 256, 512]     # number of neurons per hidden layer
+L_list_coarse = [1,2,3]                        # number of hidden layers
+W_list_coarse = [64, 128, 256, 512]             # number of neurons per hidden layer
 
 
 # Run the simulation for only 1 epoch to warm-up (first run always takes longer)
@@ -30,7 +30,7 @@ _, _ = train_emulator(nn_warmup, fd; n_epochs=1)
 
 
 # Now train the emulator with different coarse hyperparameter
-for L in L_list, W in W_list_coarse
+for L in L_list_coarse, W in W_list_coarse
 
     # Define simulation parameters for specific hyperparameter
     id = "_hyperpara_L$(L)_W$(W)"

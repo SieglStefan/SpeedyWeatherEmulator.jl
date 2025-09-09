@@ -3,7 +3,7 @@
 This section introduces the core functionality of the package.  
 After a short review of the basic workflow of the package it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate and its performance.
 
-For the plots in this chapter, a separate, slightly modified script was used. If you are particularly interested in the reproducibility of the plots, you can find the exact code in the repository: [utils/plots_docu_running_SWE](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/tree/main/utils/plots_docu_running_SWE)
+For the plots in this chapter, a separate, slightly modified script was used. If you are particularly interested in details, you can find the exact code used for plot creation in the repository: [plot_utils/docs_plots_running_SWE](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/tree/main/plot_utils/docs_plots_running_SWE)
 
 
 
@@ -41,8 +41,8 @@ After the training, the mean relative error and max relative error for one step 
 
 ```text
 --------------------------------------
-Mean relative error: 3.144 %
-Max relative error:  6.774 %
+Mean relative error: 3.528 %
+Max relative error:  6.673 %
 --------------------------------------
 ```
 
@@ -78,11 +78,11 @@ plot_heatmap(vor_em, trunc=5, title="Emulated Vorticity vor_em", range=colorrang
 
 resulting in:
 
-![Initial Vorticity vor0](assets/running_SWE/vor0_BWF.png
+![Initial Vorticity vor0](assets/running_SWE/vor0_BWF.png)
 
-![Real SpeedyWeather.jl Vorticity vorSW](assets/running_SWE/vor_sw_BWF.png)
+![Taget Vorticity vor_sw](assets/running_SWE/vor_sw_BWF.png)
 
-![Predicted Emulator Vorticity vorEM](assets/running_SWE/vor_em_BWF.png)
+![Emulated Vorticity vor_em](assets/running_SWE/vor_em_BWF.png)
 
 The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the real SpeedyWeather.jl data reasonably well.
 
@@ -132,12 +132,9 @@ With the simulation parameters defined, raw data can be generated directly from 
 generate_raw_data(sim_para; overwrite=true)
 ```
 
-This command creates a folder with one subdirectory per initial condition and stores the corresponding raw simulation output.
+This command creates a folder with one subdirectory per initial condition and stores the corresponding raw simulation output. If raw data with the same simulation parameters already exist and `overwrite = false`, data generation is aborted.
 
-Generating raw data can be slow and memory-intensive (few gigabytes), since not only vorticity but also other prognostic variables are written to disk. Output of diagnostic variables is disabled.
-It should therefore be used sparingly, ideally only when new datasets are absolutely required! Instead, it is strongly recommended to use `SimData` objects (few megabytes) as often as possible.
-
-Furthermore, problems may arise if one attempts to delete the raw data within the same session in which they were generated.
+Generating raw data can be slow and memory-intensive (few gigabytes), since not only vorticity but also other prognostic variables (output of diagnostic variables is disabled) are written to disk. It should therefore be used sparingly, ideally only when new datasets are absolutely required! Instead, it is strongly recommended to use `SimData` objects (few megabytes) as often as possible. Furthermore, problems may arise if one attempts to delete the raw data within the same session in which they were generated.
 
 ### Structured Simulation Data
 In order to make use of raw data, it must be loaded into a `SimData` object, which is handled by a convenience constructor:
@@ -246,6 +243,8 @@ Mean relative error: 13.041 %
 Max relative error:  62.957 %
 --------------------------------------
 ```
+
+
 
 and returns both the trained emulator and its recorded loss history with training time.
 

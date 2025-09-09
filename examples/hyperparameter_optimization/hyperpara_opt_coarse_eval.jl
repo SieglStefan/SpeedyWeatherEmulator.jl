@@ -15,7 +15,7 @@ sim_data = load_data(SimData, sim_para_loading)
 fd = FormattedData(sim_data)
 
 # Define the parameters for the coarse hyperparameter optimization
-L_list = [1,2,3]                        # number of hidden layers
+L_list_coarse = [1,2,3]                 # number of hidden layers
 W_list_coarse = [64, 128, 256, 512]     # number of neurons per hidden layer
 
 # Calculate number of spectral coeff.
@@ -31,8 +31,8 @@ plot_data = Dict{Tuple{Int,Int}, NamedTuple}()
 horizons = [1, 6, 12, 24]
 
 
-# Fill the data dict. for all coarse hyperparameter
-for L in L_list, W in W_list_coarse
+# Fill the plot data dict. for all coarse hyperparameter
+for L in L_list_coarse, W in W_list_coarse
 
     # Define simulation parameters for specific hyperparameter
     id = "_hyperpara_L$(L)_W$(W)"
@@ -53,7 +53,7 @@ for L in L_list, W in W_list_coarse
 
     end
 
-    # Initialize the dict.
+    # Fill the dict.
     plot_data[(L,W)] = (err=err_vec, params=n_params(d, W, L))
 end
 
@@ -75,7 +75,7 @@ for h in horizons
                     title="horizon = $(h)h", 
                     titlefontsize=18)                   # subtitle size
 
-    for L in L_list 
+    for L in L_list_coarse 
         xs = [plot_data[(L,W)].params for W in W_list_coarse]
         ys = [plot_data[(L,W)].err[h] for W in W_list_coarse]
         

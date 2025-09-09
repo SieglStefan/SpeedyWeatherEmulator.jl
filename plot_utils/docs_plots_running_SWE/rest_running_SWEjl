@@ -10,7 +10,7 @@ Random.seed!(1234)
 
 
 ### Plot 1
-sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test1")
+sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test")
 generate_raw_data(sim_para)
 sim_data = SimData(sim_para)
 fd = FormattedData(sim_data,  splits=(train=100, valid=50, test=50))    # results in splits=(train=0.5, valid=0.25, test=0.25)
