@@ -14,11 +14,14 @@ It enables users to:
 
 The package is designed to streamline the workflow from simulation to machine learning surrogate modeling, making it easier to test neural network approaches for atmospheric dynamics.
 
+For a quick overview of applications of SpeedyWeatherEmulator.jl, there is a project report available in the package repository: [Julia homepage](https://julialang.org).
+It briefly introduces the necessity and background of emulators and explains and discusses the [Examples](docs/examples.md) as applications.
+
 
 ## Contents
 
 ```@contents
-Pages = ["running.md", "ex.md", "api.md"]
+Pages = ["running_SWE.md", "examples.md", "functions_index.md"]
 Depth = 2
 ```
 

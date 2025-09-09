@@ -13,7 +13,7 @@ const N_IC = 1000
 # Define the parameters for the coarse hyperparameter optimization
 L_list_coarse = [1,2,3]
 L_list_fine = [1]
-W_list_coarse = [64, 128, 256, 512]     # number of neurons per hidden layer
+W_list_coarse = [64, 128, 256, 512]                                         # number of neurons per hidden layer
 W_list_fine = [256, 384, 512, 640, 768, 896, 1024, 1280, 1536, 2048]        # number of neurons per hidden layer
 
 pairs_coarse = [(L, W) for L in L_list_coarse for W in W_list_coarse]

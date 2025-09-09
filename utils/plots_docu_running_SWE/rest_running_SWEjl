@@ -1,0 +1,29 @@
+using SpeedyWeatherEmulator
+using Plots, CairoMakie
+using Random
+
+##### Plots for the chapters after "Basic Workflow" of "Running SpeedyWeahterEmulator.jl"
+        # (raw_data is manually deleted after plot saving)
+
+# Fix the seed for reproducibility
+Random.seed!(1234)
+
+
+### Plot 1
+sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test1")
+generate_raw_data(sim_para)
+sim_data = SimData(sim_para)
+fd = FormattedData(sim_data,  splits=(train=100, valid=50, test=50))    # results in splits=(train=0.5, valid=0.25, test=0.25)
+nn = NeuralNetwork(io_dim=54, hidden_dim=128, n_hidden=2)
+
+em, losses = train_emulator(nn, fd)
+p1 = plot_losses(losses; title="Training History (T5)")
+display(p1)
+Plots.savefig(p1, joinpath(@__DIR__, "plots", "losses.pdf"))
+
+
+### Plot 2
+vec = rand(Float32, 54)     # random coeffs for trunc=5
+p2 = plot_heatmap(vec; trunc=5, title="Random Vorticity Field", range=(-2.5,+2.5))
+display(p2)
+CairoMakie.save(joinpath(@__DIR__, "plots", "heatmap.pdf"), p2)

@@ -2,7 +2,7 @@ using Plots
 using Statistics
 
 """
-    plot_losses(losses::Losses; title::String="Losses of the emulator")
+    plot_losses(losses::Losses; title::String="Emulator Losses")
 
 Plot training and validation losses stored in a `Losses` container.
 
@@ -13,7 +13,7 @@ Plot training and validation losses stored in a `Losses` container.
 
 # Arguments
 - `losses::Losses`: Container with training/validation loss history and number of batches per epoch.
-- `title::String="Losses of the emulator"`: Optional argument for different plot titles (e.g. different simulation parameters).
+- `title::String="Emulator Losses"`: Optional argument for different plot titles (e.g. different simulation parameters).
 
 # Returns
 - `p::Plots.Plot`: Combined plot of training and validation losses.
@@ -30,7 +30,7 @@ p = plot_losses(losses)
 display(p)  
 ```
 """
-function plot_losses(losses::Losses; title::String="Losses of the emulator")
+function plot_losses(losses::Losses; title::String="Emulator Losses")
 
     # Unpack simulation parameters
     (; train, valid, bpe_train, bpe_valid) = losses

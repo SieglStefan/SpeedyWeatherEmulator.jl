@@ -12,7 +12,7 @@ This brief introduction to the workflow is meant to illustrate how the different
 Every workflow in SpeedyWeatherEmulator.jl begins by defining the simulation parameters in a `SimPara` object. These parameters control the spectral truncation, the number of datapoints to be stored per i.c., the number of independent initial conditions and more:
 
 ```julia
-sim_para = SimPara(trunc=5, n_data=20, n_ic=500)
+sim_para = SimPara(trunc=5, n_data=24, n_ic=800, id_key="_basic_workflow")
 ```
 
 With these parameters defined, raw vorticity data is generated using SpeedyWeather.jl and stored on disk.
@@ -39,42 +39,48 @@ After the training, the mean relative error and max relative error for one step 
 
 ```text
 --------------------------------------
-Mean relative error: 13.041 %
-Max relative error:  62.957 %
+Mean relative error: 3.144 %
+Max relative error:  6.774 %
 --------------------------------------
 ```
 
 The recorded losses can then be visualized:
 
 ```julia
-display(plot_losses(losses))
+plot_losses(losses)
 ```
 
-![Loss curves](assets/doc_basicworkflow_lossplot.png)
+![Loss curves](assets/running_SWE/losses_BWF.pdf)
 
 Finally, we can visually compare emulator predictions with SpeedyWeather.jl outputs. Here we select one vorticity state (`vor0`), its SpeedyWeather forecast (`vorSW`), and the emulator’s prediction (`vorEM`) after six steps. This corresponds to a six hour forecast:
 
 ```julia
-vor0 = sim_data.data[:,10,500]
-vorSW = sim_data.data[:,16,500]
-vorEM = em(em(em(vor0)))
+vor0 = fd.data_pairs.x_test[:,10,1]
+vor_sw = fd.data_pairs.y_test[:,10+6,1]
+
+# Calculate emulator vorticity
+vor_em = vor0
+for _ in 1:6
+    global vor_em = em(vor_em)
+end
 ```
 
 Each of them can be visualized as a heatmap,
 
 ```
-plot_heatmap(vor0, trunc=5, title="Initial Vorticity vor0")
-plot_heatmap(vorSW, trunc=5, title="Real SpeedyWeather.jl Vorticity vorSW")
-plot_heatmap(vorEM, trunc=5, title="Predicted Emulator Vorticity vorEM")
+colorrange = (-2.5e-5, +2.5e-5)
+plot_heatmap(vor0, trunc=5, title="Initial Vorticity vor0", range=colorrange)
+plot_heatmap(vor_sw, trunc=5, title="Target Vorticity vor_sw", range=colorrange)
+plot_heatmap(vor_em, trunc=5, title="Emulated Vorticity vor_em", range=colorrange)
 ```
 
 resulting in:
 
-![Initial Vorticity vor0](assets/doc_basicworkflow_vor0.png)
+![Initial Vorticity vor0](assets/running_SWE/vor0_BWF.pdf)
 
-![Real SpeedyWeather.jl Vorticity vorSW](assets/doc_basicworkflow_vorSW.png)
+![Real SpeedyWeather.jl Vorticity vorSW](assets/running_SWE/vor_sw_BWF.pdf)
 
-![Predicted Emulator Vorticity vorEM](assets/doc_basicworkflow_vorEM.png)
+![Predicted Emulator Vorticity vorEM](assets/running_SWE/vor_em_BWF.pdf)
 
 The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the real SpeedyWeather.jl data reasonably well.
 
@@ -208,7 +214,9 @@ For convenience, an emulator can be used like a function:
 ```julia
 y_pred = em(x)
 ```
-where `x` is a spectral coefficient tensor at time `t` and the output is the emulator prediction at `t + Δt`. The first dimension of `x` must equal the input/output dimension of the `NeuralNetwork` of `em()`. Furthermore, `Emulator` automatically handles moving data to the GPU (if available) and back to the CPU.
+where `x` is a spectral coefficient tensor at time `t` and the output is the emulator prediction at `t + Δt`. The first dimension of `x` must equal the input/output dimension of the `NeuralNetwork` of `em()`. 
+
+Furthermore, `Emulator` automatically handles moving data to the GPU (if available) and back to the CPU.
 
 ### Logging Training Progress
 During training, losses are automatically collected in a `Losses` object.
@@ -226,7 +234,16 @@ The central routine is `train_emulator`, which orchestrates the entire process:
 6. Reinitializes the `Losses` object with the needed training time
 7. Evaluate the trained emulator on the test set.
 
-At the end, the function prints rel. error statistics of the test set to `STDOUT` and returns both the trained emulator and its recorded loss history with training time.
+At the end, `train_emulator` prints rel. error statistics of the test set to `STDOUT`:
+
+```text
+--------------------------------------
+Mean relative error: 13.041 %
+Max relative error:  62.957 %
+--------------------------------------
+```
+
+and returns both the trained emulator and its recorded loss history with training time.
 
 A typical training run looks like this:
 
@@ -256,7 +273,7 @@ compare_emulator(em;
 compare_emulator(em; 
     x_test=fd.data_pairs.x_test,
     y_test=fd.data_pairs.y_test,
-    n_it = 3)
+    n_it = 3)   # corresponds to the comp. of em(em(em()))
 ```
 
 ## Saving/Loading Data
@@ -298,6 +315,8 @@ SpeedyWeatherEmulator.jl/data
    └ sim_data_T5_ndata50_IC200_ID_demo.jld2
 ```
 
+where `sim_data_T5_ndata50_IC200_ID_demo.jld2` is an example of an stored `SimData` object.
+
 It is also possible to specify a custom path:
 
 ```julia
@@ -305,7 +324,6 @@ save_data(sim_data, path = myPath)
 ```
 
 If data with the same simulation parameters already exist and `overwrite = false` (default), saving is aborted.
-
 No functions were defined for directly saving and loading raw data, since the storage structure is more complex than that of JLD2. However, this is not really necessary due to the existence of `SimData`.
 
 
@@ -342,25 +360,24 @@ It displays:
 This makes it easy to diagnose whether the network is converging properly and whether overfitting occurs.
 
 ```julia
-em, losses = train_emulator(nn, fd)
-plot_losses(losses; title="Training history (T5)")
+plot_losses(losses; title="Training History (T5)")
 ```
 
-![Loss Plot](assets/doc_evaluation_lossplot.png)
+![Loss Plot](assets/running_SWE/losses.pdf)
 
 The number of epochs is inferred automatically from the batch size and dataset split.
 The returned plot object can be further customized or saved using the standard Plots.jl interface.
 
 ### Vorticity Heatmaps
 To inspect actual states of the barotropic model, the function `plot_heatmap` reconstructs a vorticity field from a spectral coefficient vector and shows it as a heatmap.
-This requires specifying the spectral truncation to interpret the coefficient layout correctly:
+This requires specifying the spectral truncation to interpret the coefficient layout correctly. With the argument `range = (a, b)` the color range of the heatmap can be adjusted:
 
 ```julia
 vec = rand(Float32, 54)     # random coeffs for trunc=5
-plot_heatmap(vec; trunc=5, title="Random vorticity field")
+plot_heatmap(vec; trunc=5, title="Random Vorticity Field", range=(-2.5,+2.5))
 ```
 
-![Heatmap Plot](assets/doc_evaluation_heatmap.png)
+![Heatmap Plot](assets/running_SWE/heatmap.pdf)
 
 Internally, the coefficients are converted into a lower-triangular matrix and then transformed into a physical-space grid.
-The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state. With the argument `range = (a, b)`, the color range of the heatmap can be adjusted.
+The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state. 
