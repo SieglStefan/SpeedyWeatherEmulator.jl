@@ -52,7 +52,7 @@ The recorded losses can then be visualized:
 plot_losses(losses)
 ```
 
-![Loss curves](assets/running_SWE/losses_BWF.pdf)
+![Loss curves](assets/running_SWE/losses_BWF.png)
 
 Finally, we can visually compare emulator predictions with SpeedyWeather.jl outputs. Here we select one vorticity state (`vor0`), its SpeedyWeather forecast (`vorSW`), and the emulator’s prediction (`vorEM`) after six steps. This corresponds to a six hour forecast:
 
@@ -78,11 +78,11 @@ plot_heatmap(vor_em, trunc=5, title="Emulated Vorticity vor_em", range=colorrang
 
 resulting in:
 
-![Initial Vorticity vor0](assets/running_SWE/vor0_BWF.pdf)
+![Initial Vorticity vor0](assets/running_SWE/vor0_BWF.png
 
-![Real SpeedyWeather.jl Vorticity vorSW](assets/running_SWE/vor_sw_BWF.pdf)
+![Real SpeedyWeather.jl Vorticity vorSW](assets/running_SWE/vor_sw_BWF.png)
 
-![Predicted Emulator Vorticity vorEM](assets/running_SWE/vor_em_BWF.pdf)
+![Predicted Emulator Vorticity vorEM](assets/running_SWE/vor_em_BWF.png)
 
 The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the real SpeedyWeather.jl data reasonably well.
 
@@ -367,7 +367,7 @@ This makes it easy to diagnose whether the network is converging properly and wh
 plot_losses(losses; title="Training History (T5)")
 ```
 
-![Loss Plot](assets/running_SWE/losses.pdf)
+![Loss Plot](assets/running_SWE/losses.png)
 
 The number of epochs is inferred automatically from the batch size and dataset split.
 The returned plot object can be further customized or saved using the standard Plots.jl interface.
@@ -381,7 +381,7 @@ vec = rand(Float32, 54)     # random coeffs for trunc=5
 plot_heatmap(vec; trunc=5, title="Random Vorticity Field", range=(-2.5,+2.5))
 ```
 
-![Heatmap Plot](assets/running_SWE/heatmap.pdf)
+![Heatmap Plot](assets/running_SWE/heatmap.png)
 
 Internally, the coefficients are converted into a lower-triangular matrix and then transformed into a physical-space grid.
 The resulting heatmap provides an intuitive view of the spatial vorticity pattern represented by the spectral state. 
