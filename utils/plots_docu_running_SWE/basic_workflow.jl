@@ -26,7 +26,7 @@ em, losses = train_emulator(nn, fd)
 # Plot and save the loss curve for inspection
 p = plot_losses(losses)
 display(p)
-#Plots.savefig(p, joinpath(@__DIR__, "plots", "losses_BWF.pdf"))
+Plots.savefig(p, joinpath(@__DIR__, "plots", "losses_BWF.png"))
 
 # Define test vorticity for comparison
 vor0 = fd.data_pairs.x_test[:,10,1]
@@ -47,7 +47,6 @@ display(p1)
 display(p2)
 display(p3)
 
-
-#CairoMakie.save(joinpath(@__DIR__, "plots", "vor0_BWF.pdf"), p1)
-#CairoMakie.save(joinpath(@__DIR__, "plots", "vor_sw_BWF.pdf"), p2)
-#CairoMakie.save(joinpath(@__DIR__, "plots", "vor_em_BWF.pdf"), p3)
+CairoMakie.save(joinpath(@__DIR__, "plots", "vor0_BWF.png"), p1)
+CairoMakie.save(joinpath(@__DIR__, "plots", "vor_sw_BWF.png"), p2)
+CairoMakie.save(joinpath(@__DIR__, "plots", "vor_em_BWF.png"), p3)

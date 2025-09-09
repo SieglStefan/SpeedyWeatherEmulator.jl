@@ -18,6 +18,9 @@ For a quick overview of applications of SpeedyWeatherEmulator.jl, there is a pro
 It briefly introduces the necessity and background of emulators and explains and discusses the [Examples](examples.md) as applications.
 
 
+If you are interested in specific parts of the code or other details, the package repository is linked here: [Package Repository](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl)
+
+
 ## Contents
 
 ```@contents

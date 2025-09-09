@@ -3,6 +3,8 @@
 This section introduces the core functionality of the package.  
 After a short review of the basic workflow of the package it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate and its performance.
 
+For the plots in this chapter, a separate, slightly modified script was used. If you are particularly interested in the reproducibility of the plots, you can find the exact code in the repository: [utils/plots_docu_running_SWE](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/tree/main/utils/plots_docu_running_SWE)
+
 
 
 ## Basic Workflow
@@ -132,8 +134,10 @@ generate_raw_data(sim_para; overwrite=true)
 
 This command creates a folder with one subdirectory per initial condition and stores the corresponding raw simulation output.
 
-Generating raw data can be slow and memory-intensive, since not only vorticity but also other prognostic variables are written to disk. Output of diagnostic variables is disabled.
-It should therefore be used sparingly, ideally only when new datasets are absolutely required! Instead, it is strongly recommended to use `SimData` objects as often as possible.
+Generating raw data can be slow and memory-intensive (few gigabytes), since not only vorticity but also other prognostic variables are written to disk. Output of diagnostic variables is disabled.
+It should therefore be used sparingly, ideally only when new datasets are absolutely required! Instead, it is strongly recommended to use `SimData` objects (few megabytes) as often as possible.
+
+Furthermore, problems may arise if one attempts to delete the raw data within the same session in which they were generated.
 
 ### Structured Simulation Data
 In order to make use of raw data, it must be loaded into a `SimData` object, which is handled by a convenience constructor:

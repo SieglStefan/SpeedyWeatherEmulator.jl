@@ -19,11 +19,11 @@ nn = NeuralNetwork(io_dim=54, hidden_dim=128, n_hidden=2)
 em, losses = train_emulator(nn, fd)
 p1 = plot_losses(losses; title="Training History (T5)")
 display(p1)
-Plots.savefig(p1, joinpath(@__DIR__, "plots", "losses.pdf"))
+Plots.savefig(p1, joinpath(@__DIR__, "plots", "losses.png"))
 
 
 ### Plot 2
 vec = rand(Float32, 54)     # random coeffs for trunc=5
 p2 = plot_heatmap(vec; trunc=5, title="Random Vorticity Field", range=(-2.5,+2.5))
 display(p2)
-CairoMakie.save(joinpath(@__DIR__, "plots", "heatmap.pdf"), p2)
+CairoMakie.save(joinpath(@__DIR__, "plots", "heatmap.png"), p2)
