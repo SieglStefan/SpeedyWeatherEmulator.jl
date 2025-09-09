@@ -1,6 +1,9 @@
 # Examples
 
-This section contains the code used to produce the results presented in the report, as well as additional examples and outcomes.
+This section contains the code used to produce the results presented in the project report, as well as additional examples and outcomes.
+
+The [Project Report](https://github.com/username/SpeedyWeatherEmulator.jl/blob/main/ProjectReport.pdf) provides a quick overview of the examples without code snippets. Furthermore, it briefly introduces the necessity and background of  emulators and explains and discusses the results.
+
 
 
 ## Hyperparameter Optimization
