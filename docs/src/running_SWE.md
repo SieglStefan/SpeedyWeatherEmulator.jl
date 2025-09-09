@@ -1,9 +1,8 @@
 # Running SpeedyWeatherEmulator.jl
 
-This section introduces the core functionality of the package.  
-After a short review of the basic workflow of the package it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate and its performance.
+This section introduces the core functionality of the package. After a short review of the basic workflow it provides a step-by-step overview of how to generate simulation data, format it for training, build and train an emulator, saving/loading data, and evaluate its performance.
 
-For the plots in this chapter, a separate, slightly modified script was used. If you are particularly interested in details, you can find the exact code used for plot creation in the repository: [plot_utils/docs_plots_running_SWE](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/tree/main/plot_utils/docs_plots_running_SWE)
+For the plots in this chapter, a separate, slightly modified script was used. If you are particularly interested in this details, you can find the exact code used for plot creation in the repository folder [`plot_utils/docs_plots_running_SWE`](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/tree/main/plot_utils/docs_plots_running_SWE).
 
 
 
@@ -69,7 +68,7 @@ end
 
 Each of them can be visualized as a heatmap,
 
-```
+```julia
 colorrange = (-2.5e-5, +2.5e-5)
 plot_heatmap(vor0, trunc=5, title="Initial Vorticity vor0", range=colorrange)
 plot_heatmap(vor_sw, trunc=5, title="Target Vorticity vor_sw", range=colorrange)
@@ -84,13 +83,13 @@ resulting in:
 
 ![Emulated Vorticity vor_em](assets/running_SWE/vor_em_BWF.png)
 
-The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the real SpeedyWeather.jl data reasonably well.
+The difference between the initial vorticity and the final vorticity is small, but it can be seen that the emulator already approximates the target SpeedyWeather.jl data reasonably well.
 
 
 
 ## Generating and Formatting Data
 
-Before training a neural network emulator, we need to generate and structure data.  
+Before training a emulator, we need to generate and structure data.  
 This process has three steps: defining the simulation parameters, running SpeedyWeather.jl to create raw data, and finally preparing formatted datasets for machine learning.
 
 ### Simulation Parameters
@@ -102,13 +101,13 @@ This struct collects the essential parameters of a barotropic SpeedyWeather.jl s
 - the number of independent initial conditions (`n_ic`),  
 - and additional metadata such as spin-up length, timestep size, or a unique `id_key`.
 
-Together, these parameters determine both the structure of the generated data and the folder name under which it is stored. For example:
+Together, these parameters determine both the structure of the generated data. For example:
 
 ```julia
 sim_para = SimPara(trunc=5, n_data=50, n_ic=200, id_key="_test1")
 ```
 
-It should be emphasized once again that only the fields mentioned above are responsible for saving and loading data. In general, it is recommended not to rely solely on the identifiers `trunc`, `n_data`, and `n_ic`, but to always provide an additional `id_key` as well! See [Saving/Loading Data](#savingloading-data) for details.
+It should be emphasized that only the fields used in the example above are responsible for saving and loading data. In general, it is recommended not to rely solely on the identifiers `trunc`, `n_data`, and `n_ic`, but to always provide an additional `id_key` as well! See [Saving/Loading Data](#savingloading-data) for details.
 
 Furthermore, there are additional simulation parameters with default values, summarized as follows:
 
@@ -147,7 +146,7 @@ The resulting tensor has dimensions $\text{data} \in \mathbb{R}^{(2 \cdot n_\tex
 This format is optimized for efficient slicing over time and initial conditions, and serves as the basis for all later steps. It also consumes significantly less memory than the previous raw data and can be easily handled using the methods from [Saving/Loading Data](#savingloading-data).
 
 ### Preparing Formatted Data
-For machine learning, we need to turn the discrete time series into input–output pairs.
+For machine learning, we need to turn the discrete time series into input–target pairs.
 The `FormattedData` constructor automates this process by pairing consecutive timesteps:
 
 ```math
@@ -215,7 +214,7 @@ For convenience, an emulator can be used like a function:
 ```julia
 y_pred = em(x)
 ```
-where `x` is a spectral coefficient tensor at time `t` and the output is the emulator prediction at `t + Δt`. The first dimension of `x` must equal the input/output dimension of the `NeuralNetwork` of `em()`. 
+where `x` is a spectral coefficient tensor at time `t` and the output is the emulator prediction at `t + t_step`. The first dimension of `x` must equal the input/output dimension of the `NeuralNetwork` of `em()`. 
 
 Furthermore, `Emulator` automatically handles moving data to the GPU (if available) and back to the CPU.
 
@@ -230,7 +229,7 @@ The central routine is `train_emulator`, which orchestrates the entire process:
 1. Compute Z-score parameters from the training set.
 2. Build an `Emulator` according to the chosen architecture.
 3. Normalize training and validation data.
-4. Train with the Adam optimizer, starting with a given learning rate that halves every 30 epochs.
+4. Train with a Adam optimizer, starting with a given learning rate that halves every 30 epochs.
 5. Record training and validation losses batch-by-batch.
 6. Reinitializes the `Losses` object with the needed training time
 7. Evaluate the trained emulator on the test set.
@@ -291,7 +290,7 @@ The helper functions `data_path` and `delete_data` ensure that every dataset rec
 - Raw data are stored in dedicated folders with one subfolder per run.  
 - All other types (`SimData`, `Emulator`, `Losses`) are saved as single `.jld2` files.
 
-The file name includes truncation, number of timesteps, number of initial conditions, and the optional `id_key`, e.g.
+The file name includes truncation `trunc`, number of data points `n_data`, number of initial conditions `n_ic`, and a optional key `id_key`, e.g.
 
 ```text
 data/sim_data/sim_data_T5_ndata50_IC200_ID_demo.jld2
@@ -305,7 +304,7 @@ Any supported container (`SimData`, `Emulator` or `Losses`) can be saved with a 
 
 ```julia
 save_data(sim_data)
-save_data(emu; overwrite=true)
+save_data(em; overwrite=true)
 ```
 
 In the second case existing data will be overwritten. By default, all data are stored in
@@ -336,7 +335,7 @@ Previously saved objects can be reloaded at any time:
 
 ```julia
 sim_data_loaded = load_data(SimData, sim_para)
-em_loaded      = load_data(Emulator, sim_para)
+em_loaded = load_data(Emulator, sim_para)
 ```
 
 Here, the first argument specifies the object type to be loaded, and sim_para serves as the identifier of which one. A custom path can also be chosen again with `path = myPath`, from which the data will be loaded.
@@ -372,7 +371,7 @@ The number of epochs is inferred automatically from the batch size and dataset s
 The returned plot object can be further customized or saved using the standard Plots.jl interface.
 
 ### Vorticity Heatmaps
-To inspect actual states of the barotropic model, the function `plot_heatmap` reconstructs a vorticity field from a spectral coefficient vector and shows it as a heatmap.
+To inspect actual states of vorticity, the function `plot_heatmap` reconstructs a vorticity field from a spectral coefficient vector and shows it as a heatmap.
 This requires specifying the spectral truncation to interpret the coefficient layout correctly. With the argument `range = (a, b)` the color range of the heatmap can be adjusted:
 
 ```julia
