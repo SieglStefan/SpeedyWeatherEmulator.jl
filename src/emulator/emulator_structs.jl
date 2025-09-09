@@ -101,7 +101,7 @@ function (m::Emulator)(x::AbstractArray{Float32})
 
     # Using inverse z-score to get normal spectral coeff. at t + t_step
     return inv_zscore(y_norm, m.zscore_para) |> cpu                         # y_norm is on gpu, get it back to cpu
-
+end
 
 """
     Losses{F}
