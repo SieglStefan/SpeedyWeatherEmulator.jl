@@ -14,7 +14,7 @@ It enables users to:
 
 The package is designed to streamline the workflow from simulation to machine learning surrogate modeling, making it easier to test neural network approaches for atmospheric dynamics.
 
-For a quick overview of applications of SpeedyWeatherEmulator.jl, there is a project report available in the package repository: [Project Report](https://github.com/username/SpeedyWeatherEmulator.jl/blob/main/ProjectReport.pdf).
+For a quick overview of applications of SpeedyWeatherEmulator.jl, there is a project report available in the package repository: [Project Report](https://github.com/SieglStefan/SpeedyWeatherEmulator.jl/blob/main/ProjectReport.pdf).
 It briefly introduces the necessity and background of emulators and explains and discusses the [Examples](examples.md) as applications.
 
 
